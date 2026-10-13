@@ -84,13 +84,14 @@ Opening `mailto:` or copying text **never** changes state. Default follow-up off
 - Composite FKs `(x_id, owner_id) → parent(id, owner_id)`: verified that user B cannot attach a requirement to user A's application even with a known UUID.
 - `digest_runs`: clients can read their own rows only; writes go through service-role functions.
 
-## CSV import mapping (MVP-0)
+## CSV import (MVP-0)
 
-Accepted columns (case-insensitive, any order; unknown columns ignored; the user can remap in the wizard):
+Code: `lib/features/import/` · SQL: `import_applications()` in [20261014000004_import.sql](../../supabase/migrations/20261014000004_import.sql).
 
-`university, country, department, programme, degree, research_area, deadline, deadline_timezone, funding_deadline, fee, fee_currency, programme_url, portal_url, stage, priority, notes`
-
-- `university` creates or reuses an `institutions` row by name.
-- `deadline` accepts `YYYY-MM-DD` or `YYYY-MM-DD HH:mm`. A date without a time means 23:59 in `deadline_timezone`, which falls back to the timezone chosen in the wizard.
-- Preview shows parsed rows and errors before anything is written. Import is a single RPC/transaction so a failed import leaves nothing behind.
-- Optional: seed a default requirement set per imported row (Transcript, CV, SOP, English test, Fee).
+- **Input:** a file (.csv/.tsv) or a paste from Excel/Sheets (tab-separated). The delimiter is detected from the header line. BOM, CRLF and quoted commas are handled. Limit: 500 rows.
+- **Columns:** auto-matched by alias (e.g. *School* → University, *Due date* → Deadline, *Status* → Stage). Each field maps to at most one column, and the user can remap. Only University and Programme are required.
+- **Dates:** ISO, numeric (day/month order is a wizard setting, inferred when one part is > 12), and month names, with optional 12/24-hour times and a trailing zone abbreviation (`EST`, `PST`, `GMT`, `CET`, `AoE` → `Etc/GMT+12`, …). A date with no time means 23:59.
+- **Deadline zone, first match wins:** zone column → zone named in the date → the university's saved zone → country default → wizard default.
+- **Lenient values:** unknown degree → Other, unknown stage → Researching, unknown priority → Normal. Each produces a warning, not an error. A fee without a determinable currency is dropped with a warning. Bare domains get `https://`.
+- **Skipped rows:** validation errors (same rules as the form), duplicates of an existing application (same university, programme and degree, ignoring case and punctuation), and repeats within the file.
+- **Save:** one RPC, one transaction; institutions are reused case-insensitively. Optionally seeds `default_requirements()` (transcript, CV, SOP, English test, fee) on each new application.

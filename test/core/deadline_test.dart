@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gradtrack/core/time/deadline.dart';
-import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:gradtrack/features/applications/domain/institution.dart';
+import 'package:gradtrack/features/import/domain/value_parsers.dart';
+import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 
 void main() {
   setUpAll(tzdata.initializeTimeZones);
@@ -36,6 +39,26 @@ void main() {
       expect(DueText.bucket(DateTime(2026, 10, 13, 22), now: now), DueBucket.today);
       expect(DueText.bucket(now.add(const Duration(days: 7)), now: now), DueBucket.thisWeek);
       expect(DueText.bucket(now.add(const Duration(days: 8)), now: now), DueBucket.later);
+    });
+  });
+
+  group('zones', () {
+    test('every zone the app hard-codes exists in the bundled database', () {
+      final zones = {...countryDefaultZones.values, ...zoneAbbreviations.values, 'UTC', 'Etc/GMT+12'};
+      final missing = zones.where((z) => !tz.timeZoneDatabase.locations.containsKey(z));
+      expect(missing, isEmpty);
+    });
+
+    test('unknown zone names fall back to UTC instead of throwing', () {
+      expect(zoneLocation('Mars/Olympus_Mons'), tz.UTC);
+      final d = Deadline(instant: DateTime.utc(2026, 12, 1, 12), zone: 'Mars/Olympus_Mons');
+      expect(d.zoneLabel, '1 Dec, 12:00 UTC');
+    });
+
+    test('anywhere-on-Earth deadlines are labelled AoE', () {
+      final d = Deadline.wallClock('Etc/GMT+12', 2027, 1, 15);
+      expect(d.zoneLabel, '15 Jan, 23:59 AoE');
+      expect(d.instant, DateTime.utc(2027, 1, 16, 11, 59));
     });
   });
 }
