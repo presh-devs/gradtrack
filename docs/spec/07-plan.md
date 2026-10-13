@@ -10,7 +10,7 @@ Today: Tue 13 Oct 2026 · MVP-0 in daily use: **Mon 2 Nov 2026**.
 - [ ] Supabase project, `supabase init`, migrations 001–002, pgTAP tests for RLS and the feed
 - [x] Auth (magic link), router with auth redirect, responsive shell
 - [x] `Deadline` value object + timezone formatting (unit tested)
-- [ ] Applications list + form + workspace header/details (S3–S5). List, workspace and stage change are done; the form is still to do
+- [x] Applications list + form + workspace header/details (S3–S5)
 - [ ] CSV import (S11), **then import your real spreadsheet**
 
 Exit: your real applications are in GradTrack with correct deadlines.

@@ -1,16 +1,21 @@
 import 'dart:async';
 
 import '../../features/applications/domain/application.dart';
+import '../../features/applications/domain/institution.dart';
 import '../../features/attention/domain/attention_item.dart';
 import '../time/deadline.dart';
 
 /// In-memory data for demo mode (no Supabase configured). Dates are generated
 /// relative to "now" so the Today screen always has something realistic.
 class DemoStore {
-  DemoStore._(this.applications, this.attention);
+  DemoStore._(this.applications, this.institutions, this.attention);
 
   final List<Application> applications;
+  final List<Institution> institutions;
   final List<AttentionItem> attention;
+
+  int _seq = 100;
+  int nextId() => ++_seq;
 
   final _signedIn = StreamController<bool>.broadcast();
   bool signedIn = false;
@@ -33,9 +38,10 @@ class DemoStore {
     final apps = <Application>[
       Application(
         id: 'a1',
+        institutionId: 'i1',
         institutionName: 'University of Toronto',
         programmeName: 'Computer Science',
-        degreeType: 'phd',
+        degree: DegreeType.phd,
         department: 'Department of Computer Science',
         researchArea: 'Machine learning systems',
         country: 'CA',
@@ -51,9 +57,10 @@ class DemoStore {
       ),
       Application(
         id: 'a2',
+        institutionId: 'i2',
         institutionName: 'ETH Zürich',
         programmeName: 'Data Science',
-        degreeType: 'msc',
+        degree: DegreeType.msc,
         researchArea: 'Statistical learning',
         country: 'CH',
         stage: ApplicationStage.ready,
@@ -66,9 +73,10 @@ class DemoStore {
       ),
       Application(
         id: 'a3',
+        institutionId: 'i3',
         institutionName: 'University of Edinburgh',
         programmeName: 'Informatics',
-        degreeType: 'phd',
+        degree: DegreeType.phd,
         researchArea: 'Natural language processing',
         country: 'GB',
         stage: ApplicationStage.shortlisted,
@@ -80,9 +88,10 @@ class DemoStore {
       ),
       Application(
         id: 'a4',
+        institutionId: 'i4',
         institutionName: 'KAUST',
         programmeName: 'Computer Science',
-        degreeType: 'phd',
+        degree: DegreeType.phd,
         country: 'SA',
         stage: ApplicationStage.researching,
         priority: 3,
@@ -90,9 +99,10 @@ class DemoStore {
       ),
       Application(
         id: 'a5',
+        institutionId: 'i5',
         institutionName: 'University of British Columbia',
         programmeName: 'Computer Science',
-        degreeType: 'msc',
+        degree: DegreeType.msc,
         country: 'CA',
         stage: ApplicationStage.submitted,
         priority: 2,
@@ -104,9 +114,10 @@ class DemoStore {
       ),
       Application(
         id: 'a6',
+        institutionId: 'i6',
         institutionName: 'Technical University of Munich',
         programmeName: 'Informatics',
-        degreeType: 'msc',
+        degree: DegreeType.msc,
         country: 'DE',
         stage: ApplicationStage.underReview,
         priority: 2,
@@ -202,7 +213,11 @@ class DemoStore {
       ),
     ];
 
-    return DemoStore._(apps, feed);
+    final institutions = [
+      for (final a in apps)
+        Institution(id: a.institutionId, name: a.institutionName, country: a.country, defaultTz: a.deadline?.zone),
+    ];
+    return DemoStore._(apps, institutions, feed);
   }
 
   static String _month(DateTime d) =>

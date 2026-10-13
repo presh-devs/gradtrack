@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../features/applications/presentation/application_detail_screen.dart';
 import '../features/applications/presentation/applications_screen.dart';
+import '../features/applications/presentation/form/application_form_screen.dart';
 import '../features/attention/presentation/today_screen.dart';
 import '../features/auth/presentation/auth_controllers.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
@@ -20,7 +21,9 @@ abstract final class Routes {
   static const signIn = '/sign-in';
   static const today = '/';
   static const applications = '/applications';
+  static const newApplication = '/applications/new';
   static String application(String id) => '/applications/$id';
+  static String editApplication(String id) => '/applications/$id/edit';
   static const people = '/people';
   static const tasks = '/tasks';
   static const settings = '/settings';
@@ -67,10 +70,22 @@ GoRouter router(Ref ref) {
               path: Routes.applications,
               pageBuilder: (context, state) => const NoTransitionPage(child: ApplicationsScreen()),
               routes: [
+                // Listed before ':id' so "new" isn't read as an id.
+                GoRoute(
+                  path: 'new',
+                  builder: (context, state) => const ApplicationFormScreen(),
+                ),
                 GoRoute(
                   path: ':id',
                   builder: (context, state) =>
                       ApplicationDetailScreen(id: state.pathParameters['id']!),
+                  routes: [
+                    GoRoute(
+                      path: 'edit',
+                      builder: (context, state) =>
+                          ApplicationFormScreen(id: state.pathParameters['id']!),
+                    ),
+                  ],
                 ),
               ],
             ),
