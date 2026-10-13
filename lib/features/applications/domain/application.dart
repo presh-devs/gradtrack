@@ -39,6 +39,37 @@ enum ApplicationOutcome {
       value == null ? null : values.firstWhere((o) => o.db == value);
 }
 
+enum DegreeType {
+  phd('phd', 'PhD'),
+  msc('msc', 'MSc'),
+  ma('ma', 'MA'),
+  mphil('mphil', 'MPhil'),
+  mres('mres', 'MRes'),
+  other('other', 'Other');
+
+  const DegreeType(this.db, this.label);
+  final String db;
+  final String label;
+
+  static DegreeType fromDb(String value) =>
+      values.firstWhere((d) => d.db == value, orElse: () => other);
+}
+
+enum FeeWaiver {
+  none('none', 'Not applicable'),
+  eligible('eligible', 'Eligible'),
+  requested('requested', 'Requested'),
+  granted('granted', 'Granted'),
+  denied('denied', 'Denied');
+
+  const FeeWaiver(this.db, this.label);
+  final String db;
+  final String label;
+
+  static FeeWaiver fromDb(String? value) =>
+      values.firstWhere((w) => w.db == value, orElse: () => none);
+}
+
 /// Programme + application combined (decision D3).
 @freezed
 abstract class Application with _$Application {
@@ -46,18 +77,24 @@ abstract class Application with _$Application {
 
   const factory Application({
     required String id,
+    required String institutionId,
     required String institutionName,
     required String programmeName,
-    required String degreeType,
+    required DegreeType degree,
     required ApplicationStage stage,
     String? department,
     String? researchArea,
     String? country,
     String? programmeUrl,
     String? portalUrl,
+    String? portalUsername,
+    String? fundingUrl,
     Deadline? deadline,
     Deadline? fundingDeadline,
     ApplicationOutcome? outcome,
+    double? feeAmount,
+    String? feeCurrency,
+    @Default(FeeWaiver.none) FeeWaiver feeWaiver,
     @Default(2) int priority,
     @Default(0) int requirementsDone,
     @Default(0) int requirementsTotal,
@@ -66,14 +103,7 @@ abstract class Application with _$Application {
     String? notes,
   }) = _Application;
 
-  String get degreeLabel => switch (degreeType) {
-        'phd' => 'PhD',
-        'msc' => 'MSc',
-        'ma' => 'MA',
-        'mphil' => 'MPhil',
-        'mres' => 'MRes',
-        _ => 'Other',
-      };
+  String get degreeLabel => degree.label;
   bool get isTopChoice => priority == 1;
 
   /// 0..1 across checklist items and letters; null when nothing is tracked.

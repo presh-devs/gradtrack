@@ -157,6 +157,31 @@ abstract final class AppTheme {
         shape: cardShape,
         textStyle: text.bodyMedium,
       ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: p.surface,
+        surfaceTintColor: Colors.transparent,
+        headerBackgroundColor: p.surface,
+        headerForegroundColor: p.textPrimary,
+        dividerColor: p.border,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(GtRadius.lg)),
+        todayBorder: BorderSide(color: p.primary),
+        dayStyle: text.bodyMedium,
+        weekdayStyle: text.labelMedium,
+      ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: p.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(GtRadius.lg)),
+        hourMinuteColor: p.surfaceAlt,
+        dialBackgroundColor: p.surfaceAlt,
+        dayPeriodColor: p.info.bg,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: p.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(GtRadius.lg)),
+        titleTextStyle: text.titleLarge,
+        contentTextStyle: text.bodyMedium,
+      ),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: GtBrand.ink,

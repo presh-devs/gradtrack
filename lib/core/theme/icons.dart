@@ -104,6 +104,14 @@ abstract final class GtIcons {
   static const user = _Huge(HugeIcons.strokeRoundedUser03);
   static const more = _Huge(HugeIcons.strokeRoundedMoreHorizontal);
 
+  // Form fields
+  static const clock = _Ix(IconsaxPlusLinear.clock);
+  static const globe = _Ix(IconsaxPlusLinear.global);
+  static const university = _Ix(IconsaxPlusLinear.building_4);
+  static const edit = _Ix(IconsaxPlusLinear.edit_2);
+  static const money = _Ix(IconsaxPlusLinear.money_2);
+  static const note = _Ix(IconsaxPlusLinear.note_1);
+
   // Theme
   static const themeSystem = _Ix(IconsaxPlusLinear.monitor);
   static const themeLight = _Ix(IconsaxPlusLinear.sun_1);

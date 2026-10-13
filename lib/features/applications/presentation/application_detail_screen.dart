@@ -128,7 +128,18 @@ class _Header extends StatelessWidget {
             ],
           ),
         ),
-        _StageMenu(app: app),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => context.go(Routes.editApplication(app.id)),
+              icon: const GtIcon(GtIcons.edit, size: 18),
+              label: const Text('Edit'),
+            ),
+            const SizedBox(width: GtSpace.md),
+            _StageMenu(app: app),
+          ],
+        ),
       ],
     );
   }

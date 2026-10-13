@@ -28,15 +28,23 @@ class AsyncValueView<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (value.hasValue) {
-      final content = data(value.requireValue);
-      if (!value.isLoading && !value.hasError) return content;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      // Same tree shape whether or not we're refreshing, so stateful content
+      // (forms, scroll positions) survives a background reload.
+      final refreshing = value.isLoading;
+      final failed = value.hasError && !refreshing;
+      return Stack(
         children: [
-          if (value.isLoading) const LinearProgressIndicator(minHeight: 2),
-          if (value.hasError && !value.isLoading)
-            ErrorBanner(error: value.error!, onRetry: onRetry),
-          Expanded(child: content),
+          Positioned.fill(child: data(value.requireValue)),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: refreshing
+                ? const LinearProgressIndicator(minHeight: 2)
+                : failed
+                    ? ErrorBanner(error: value.error!, onRetry: onRetry)
+                    : const SizedBox.shrink(),
+          ),
         ],
       );
     }

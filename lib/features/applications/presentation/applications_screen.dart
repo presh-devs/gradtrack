@@ -72,7 +72,7 @@ class ApplicationsScreen extends ConsumerWidget {
                   const SizedBox(width: GtSpace.sm),
                 ],
                 FilledButton.icon(
-                  onPressed: () => _soon(context, 'Adding applications'),
+                  onPressed: () => context.go(Routes.newApplication),
                   icon: const GtIcon(GtIcons.add, size: 18),
                   label: const Text('Add'),
                 ),
@@ -86,12 +86,16 @@ class ApplicationsScreen extends ConsumerWidget {
                 onRetry: () => ref.invalidate(applicationsControllerProvider),
                 data: (list) {
                   if (list.isEmpty) {
-                    return const Align(
+                    return Align(
                       alignment: Alignment.topCenter,
                       child: EmptyState(
                         icon: GtIcons.applications,
                         title: 'No applications match',
                         message: 'Clear the filters or add a programme.',
+                        action: FilledButton(
+                          onPressed: () => context.go(Routes.newApplication),
+                          child: const Text('Add application'),
+                        ),
                       ),
                     );
                   }
