@@ -65,7 +65,7 @@ class ApplicationsScreen extends ConsumerWidget {
               actions: [
                 if (width >= GtBreakpoints.medium) ...[
                   OutlinedButton.icon(
-                    onPressed: () => _soon(context, 'CSV import'),
+                    onPressed: () => context.go(Routes.importApplications),
                     icon: const GtIcon(GtIcons.import, size: 18),
                     label: const Text('Import CSV'),
                   ),
@@ -118,9 +118,6 @@ class ApplicationsScreen extends ConsumerWidget {
       ),
     );
   }
-
-  static void _soon(BuildContext context, String what) => ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text('$what lands later this week.')));
 }
 
 class _FilterBar extends ConsumerWidget {

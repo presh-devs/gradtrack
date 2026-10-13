@@ -73,33 +73,10 @@ class SupabaseApplicationsRepository implements ApplicationsRepository {
     return created['id'] as String;
   }
 
-  static Map<String, dynamic> _row(ApplicationDraft d, String institutionId) {
-    final deadline = d.deadline.toDeadline();
-    final funding = d.fundingDeadline.toDeadline();
-    final fee = d.parsedFee;
-    return {
-      'institution_id': institutionId,
-      'programme_name': d.programmeName.trim(),
-      'degree_type': d.degree.db,
-      'stage': d.stage.db,
-      if (d.stage != ApplicationStage.decided) 'outcome': null,
-      'priority': d.priority,
-      'department': blankToNull(d.department),
-      'research_area': blankToNull(d.researchArea),
-      'programme_url': blankToNull(d.programmeUrl),
-      'portal_url': blankToNull(d.portalUrl),
-      'portal_username': blankToNull(d.portalUsername),
-      'funding_url': blankToNull(d.fundingUrl),
-      'deadline_at': deadline?.instant.toIso8601String(),
-      'deadline_tz': deadline?.zone,
-      'funding_deadline_at': funding?.instant.toIso8601String(),
-      'funding_deadline_tz': funding?.zone,
-      'fee_amount': fee,
-      'fee_currency': fee == null ? null : d.feeCurrency?.trim().toUpperCase(),
-      'fee_waiver': d.feeWaiver.db,
-      'notes': blankToNull(d.notes),
-    };
-  }
+  static Map<String, dynamic> _row(ApplicationDraft d, String institutionId) => {
+        'institution_id': institutionId,
+        ...applicationColumns(d),
+      };
 
   @override
   Future<void> updateStage(String id, ApplicationStage stage) async {
@@ -170,4 +147,33 @@ class SupabaseInstitutionsRepository implements InstitutionsRepository {
         ),
     ];
   }
+}
+
+/// Draft → `applications` columns (everything except ids). Shared by
+/// create/update and bulk import so both write identical rows.
+Map<String, dynamic> applicationColumns(ApplicationDraft d) {
+  final deadline = d.deadline.toDeadline();
+  final funding = d.fundingDeadline.toDeadline();
+  final fee = d.parsedFee;
+  return {
+    'programme_name': d.programmeName.trim(),
+    'degree_type': d.degree.db,
+    'stage': d.stage.db,
+    if (d.stage != ApplicationStage.decided) 'outcome': null,
+    'priority': d.priority,
+    'department': blankToNull(d.department),
+    'research_area': blankToNull(d.researchArea),
+    'programme_url': blankToNull(d.programmeUrl),
+    'portal_url': blankToNull(d.portalUrl),
+    'portal_username': blankToNull(d.portalUsername),
+    'funding_url': blankToNull(d.fundingUrl),
+    'deadline_at': deadline?.instant.toIso8601String(),
+    'deadline_tz': deadline?.zone,
+    'funding_deadline_at': funding?.instant.toIso8601String(),
+    'funding_deadline_tz': funding?.zone,
+    'fee_amount': fee,
+    'fee_currency': fee == null ? null : d.feeCurrency?.trim().toUpperCase(),
+    'fee_waiver': d.feeWaiver.db,
+    'notes': blankToNull(d.notes),
+  };
 }

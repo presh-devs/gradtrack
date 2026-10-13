@@ -112,6 +112,11 @@ abstract final class GtIcons {
   static const money = _Ix(IconsaxPlusLinear.money_2);
   static const note = _Ix(IconsaxPlusLinear.note_1);
 
+  // Import
+  static const check = _Ix(IconsaxPlusLinear.tick_circle);
+  static const download = _Ix(IconsaxPlusLinear.document_download);
+  static const copy = _Ix(IconsaxPlusLinear.copy);
+
   // Theme
   static const themeSystem = _Ix(IconsaxPlusLinear.monitor);
   static const themeLight = _Ix(IconsaxPlusLinear.sun_1);

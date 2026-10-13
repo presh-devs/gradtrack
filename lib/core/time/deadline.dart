@@ -1,6 +1,14 @@
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+/// Looks up an IANA zone, falling back to UTC for names the bundled database
+/// doesn't know (e.g. stored by a newer client), so display never throws.
+tz.Location zoneLocation(String zone) =>
+    tz.timeZoneDatabase.locations[zone] ?? tz.UTC;
+
+/// Abbreviations clearer than the database's for some zones.
+const _zoneLabels = {'Etc/GMT+12': 'AoE'};
+
 /// A deadline as published by a university: an exact instant plus the IANA
 /// zone it was announced in, so "1 Dec 23:59 ET" is shown faithfully next to
 /// the user's own local time.
@@ -17,7 +25,7 @@ class Deadline {
     int hour = 23,
     int minute = 59,
   }) {
-    final local = tz.TZDateTime(tz.getLocation(zone), year, month, day, hour, minute);
+    final local = tz.TZDateTime(zoneLocation(zone), year, month, day, hour, minute);
     return Deadline(instant: local.toUtc(), zone: zone);
   }
 
@@ -27,12 +35,12 @@ class Deadline {
   /// IANA zone name, e.g. `America/Toronto`.
   final String zone;
 
-  tz.TZDateTime get inZone => tz.TZDateTime.from(instant, tz.getLocation(zone));
+  tz.TZDateTime get inZone => tz.TZDateTime.from(instant, zoneLocation(zone));
 
   /// "1 Dec, 23:59 EST"
   String get zoneLabel {
     final t = inZone;
-    return '${DateFormat('d MMM, HH:mm').format(t)} ${t.timeZoneName}';
+    return '${DateFormat('d MMM, HH:mm').format(t)} ${_zoneLabels[zone] ?? t.timeZoneName}';
   }
 
   /// "2 Dec, 05:59" in the viewer's local time.

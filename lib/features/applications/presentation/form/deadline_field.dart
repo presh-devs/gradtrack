@@ -194,9 +194,11 @@ class TimezoneField extends StatelessWidget {
     required this.onChanged,
     this.enabled = true,
     this.at,
+    this.label = 'Time zone',
   });
 
   final String? value;
+  final String label;
 
   /// Describe the zone's offset at this instant (e.g. the deadline), since
   /// daylight saving can differ from today. Defaults to now.
@@ -212,7 +214,7 @@ class TimezoneField extends StatelessWidget {
         ..sort();
 
   static String describe(String zone, [DateTime? at]) {
-    final location = tz.getLocation(zone);
+    final location = zoneLocation(zone);
     final now = at == null
         ? tz.TZDateTime.now(location)
         : tz.TZDateTime.from(at, location);
@@ -264,7 +266,7 @@ class TimezoneField extends StatelessWidget {
           _OptionsList<String>(
             options: options.toList(),
             onSelected: onSelected,
-            title: (z) => z.replaceAll('_', ' '),
+            title: (z) => z == 'Etc/GMT+12' ? 'Anywhere on Earth (AoE)' : z.replaceAll('_', ' '),
             subtitle: describe,
           ),
     );

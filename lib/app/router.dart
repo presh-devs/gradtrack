@@ -8,6 +8,7 @@ import '../features/applications/presentation/form/application_form_screen.dart'
 import '../features/attention/presentation/today_screen.dart';
 import '../features/auth/presentation/auth_controllers.dart';
 import '../features/auth/presentation/sign_in_screen.dart';
+import '../features/import/presentation/import_screen.dart';
 import '../features/people/presentation/people_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/tasks/presentation/tasks_screen.dart';
@@ -22,6 +23,7 @@ abstract final class Routes {
   static const today = '/';
   static const applications = '/applications';
   static const newApplication = '/applications/new';
+  static const importApplications = '/applications/import';
   static String application(String id) => '/applications/$id';
   static String editApplication(String id) => '/applications/$id/edit';
   static const people = '/people';
@@ -74,6 +76,10 @@ GoRouter router(Ref ref) {
                 GoRoute(
                   path: 'new',
                   builder: (context, state) => const ApplicationFormScreen(),
+                ),
+                GoRoute(
+                  path: 'import',
+                  builder: (context, state) => const ImportScreen(),
                 ),
                 GoRoute(
                   path: ':id',
