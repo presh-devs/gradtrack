@@ -97,7 +97,7 @@ final class SignInControllerProvider
   SignInController create() => SignInController();
 }
 
-String _$signInControllerHash() => r'c57fae8b00f559517ea48dd4fe9bd2022bf4eeba';
+String _$signInControllerHash() => r'c4a9191d62fe796f68f3fea59aeb9c7e9f5b2536';
 
 /// Sign-in form state: idle (data null) → loading → sent (data true) | error.
 

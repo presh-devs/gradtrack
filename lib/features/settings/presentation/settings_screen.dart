@@ -13,7 +13,7 @@ part 'settings_screen.g.dart';
 @Riverpod(keepAlive: true)
 class ThemeModeSetting extends _$ThemeModeSetting {
   @override
-  ThemeMode build() => ThemeMode.system;
+  ThemeMode build() => ThemeMode.light;
 
   void set(ThemeMode mode) => state = mode;
 }
