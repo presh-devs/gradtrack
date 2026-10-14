@@ -12,4 +12,7 @@ abstract final class Env {
   static const _forceDemo = bool.fromEnvironment('GT_DEMO');
 
   static bool get demo => _forceDemo || supabaseUrl.isEmpty || supabaseKey.isEmpty;
+
+  /// Demo mode because settings are missing, not because GT_DEMO asked for it.
+  static bool get demoByAccident => demo && !_forceDemo;
 }

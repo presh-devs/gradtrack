@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "GradTrack (Supabase)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      // Port 8080 is in Supabase's allowed redirect URLs (supabase/config.toml),
+      // so magic links return to this app.
+      "args": ["--dart-define-from-file=env.json", "--web-port", "8080"]
+    },
+    {
+      "name": "GradTrack (demo data)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": ["--dart-define=GT_DEMO=true", "--web-port", "8081"]
+    }
+  ]
+}

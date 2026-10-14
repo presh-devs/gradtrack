@@ -6,13 +6,21 @@ Spec: [docs/spec/README.md](docs/spec/README.md)
 
 ## Run
 
-Demo mode (no backend, in-memory sample data — any email signs you in):
+Against Supabase (needs `env.json`, see below):
 
 ```bash
-flutter run -d chrome
+flutter run -d chrome --dart-define-from-file=env.json --web-port 8080
 ```
 
-Against Supabase (first-time setup: [docs/setup/supabase.md](docs/setup/supabase.md)):
+Keep `--web-port 8080`: that's the port in Supabase's allowed redirect URLs, so magic links come back to the app. In VS Code, use the **GradTrack (Supabase)** launch configuration. Without the `--dart-define-from-file`, the app falls back to demo data and logs a warning.
+
+Demo mode (no backend, sample data, any email signs you in):
+
+```bash
+flutter run -d chrome --dart-define=GT_DEMO=true
+```
+
+First-time Supabase setup: [docs/setup/supabase.md](docs/setup/supabase.md).
 
 ```bash
 cp env.example.json env.json
