@@ -12,13 +12,19 @@ Demo mode (no backend, in-memory sample data — any email signs you in):
 flutter run -d chrome
 ```
 
-Against Supabase:
+Against Supabase (first-time setup: [docs/setup/supabase.md](docs/setup/supabase.md)):
 
 ```bash
-flutter run -d chrome --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+cp env.example.json env.json
 ```
 
-Database: migrations live in `supabase/migrations/`.
+Fill in the project URL and publishable key, then:
+
+```bash
+tool/run_web.sh
+```
+
+Database migrations live in `supabase/migrations/`:
 
 ```bash
 supabase db push

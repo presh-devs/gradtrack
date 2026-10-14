@@ -50,5 +50,6 @@ app.*.map.json
 # Local secrets (--dart-define-from-file) and Supabase CLI state
 .env*
 env*.json
+!env.example.json
 supabase/.temp/
 supabase/.branches/

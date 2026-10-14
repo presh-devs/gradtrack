@@ -30,7 +30,9 @@ class SignInController extends _$SignInController {
     state = await AsyncValue.guard(() async {
       await ref
           .read(authRepositoryProvider)
-          .sendMagicLink(email.trim(), redirectTo: Uri.base.replace(path: '/', query: null, fragment: null));
+          // The site root. (Uri.replace(query: null) would *keep* the current
+          // query, e.g. /sign-in?from=…, so build from the origin instead.)
+          .sendMagicLink(email.trim(), redirectTo: Uri.parse('${Uri.base.origin}/'));
       return true;
     });
   }

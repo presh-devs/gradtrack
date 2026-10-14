@@ -33,8 +33,17 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> sendMagicLink(String email, {required Uri redirectTo}) =>
-      _client.auth.signInWithOtp(email: email, emailRedirectTo: redirectTo.toString());
+  Future<void> sendMagicLink(String email, {required Uri redirectTo}) async {
+    try {
+      await _client.auth.signInWithOtp(email: email, emailRedirectTo: redirectTo.toString());
+    } on AuthException catch (e) {
+      throw AuthFailure(switch (e.statusCode) {
+        '429' => 'Too many sign-in emails. Wait a minute and try again.',
+        // 403 from the invite-only hook carries a user-facing message.
+        _ => e.message,
+      });
+    }
+  }
 
   @override
   Future<void> signOut() => _client.auth.signOut();

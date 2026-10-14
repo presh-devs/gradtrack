@@ -13,7 +13,7 @@
 --   * All instants are timestamptz. Deadlines also store the IANA zone they
 --     were published in (deadline_tz) so the UI can show "23:59 ET" faithfully.
 
-create extension if not exists citext;
+create extension if not exists citext with schema extensions;
 
 -- ---------------------------------------------------------------------------
 -- Shared helpers
@@ -230,7 +230,7 @@ create table public.recommenders (
   owner_id        uuid not null default auth.uid() references auth.users (id) on delete cascade,
   name            text not null,
   academic_title  text,
-  email           citext,
+  email           extensions.citext,
   institution     text,
   relationship    text,                -- 'Final-year project supervisor'
   agreed_at       timestamptz,         -- agreed to write (in general)
@@ -278,7 +278,7 @@ create table public.professors (
   name                text not null,
   academic_title      text,
   department          text,
-  email               citext,
+  email               extensions.citext,
   profile_url         text,
   lab_url             text,
   research_interests  text,
