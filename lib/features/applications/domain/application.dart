@@ -95,6 +95,14 @@ abstract class Application with _$Application {
     double? feeAmount,
     String? feeCurrency,
     @Default(FeeWaiver.none) FeeWaiver feeWaiver,
+    double? tuitionAmount,
+    String? tuitionCurrency,
+
+    /// When the application portal opens.
+    ApproxDate? opensOn,
+
+    /// When the university says decisions come out.
+    ApproxDate? decisionExpected,
     @Default(2) int priority,
     @Default(0) int requirementsDone,
     @Default(0) int requirementsTotal,

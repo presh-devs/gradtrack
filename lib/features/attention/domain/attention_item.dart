@@ -8,12 +8,14 @@ enum AttentionType {
   requirement('requirement'),
   letter('letter'),
   followUp('follow_up'),
-  task('task');
+  task('task'),
+  applicationOpens('application_opens');
 
   const AttentionType(this.db);
   final String db;
 
-  static AttentionType fromDb(String value) => values.firstWhere((t) => t.db == value);
+  /// Unknown types (from a newer server) render as tasks rather than crash.
+  static AttentionType fromDb(String value) => values.firstWhere((t) => t.db == value, orElse: () => task);
 }
 
 /// One row of the ranked "needs attention" feed. Ranking and wording are

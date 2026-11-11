@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "GradTrack (Supabase)",
+      "name": "gradll (Supabase)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
@@ -12,7 +12,7 @@
       "args": ["--dart-define-from-file=env.json", "--web-port", "8080"]
     },
     {
-      "name": "GradTrack (demo data)",
+      "name": "gradll (demo data)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",

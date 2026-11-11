@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,9 @@ import '../../../core/theme/tokens.dart';
 import '../../../core/time/deadline.dart';
 import '../../../core/widgets/async_value_view.dart';
 import '../../../core/widgets/gt_widgets.dart';
+import '../../checklist/presentation/checklist_card.dart';
+import '../../letters/presentation/letters_card.dart';
+import '../../people/presentation/application_professors_card.dart';
 import '../domain/application.dart';
 import 'applications_controller.dart';
 import 'stage_style.dart';
@@ -41,7 +45,11 @@ class ApplicationDetailScreen extends ConsumerWidget {
               )
             : ListView(
                 padding: EdgeInsets.fromLTRB(pad, GtSpace.lg, pad, GtSpace.xxl),
-                children: [PageBody(child: _Workspace(app: a, wide: width >= 1024))],
+                children: [
+                  PageBody(
+                    child: _Workspace(app: a, wide: width >= 1024),
+                  ),
+                ],
               ),
       ),
     );
@@ -56,13 +64,13 @@ class _Workspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final main = [
-      _ChecklistPlaceholder(app: app),
-    ];
+    final main = [ChecklistCard(app: app), const SizedBox(height: GtSpace.lg), LettersCard(app: app)];
     final side = [
       _DeadlineCard(app: app),
       const SizedBox(height: GtSpace.lg),
       _DetailsCard(app: app),
+      const SizedBox(height: GtSpace.lg),
+      ApplicationProfessorsCard(app: app),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -70,7 +78,9 @@ class _Workspace extends StatelessWidget {
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
-            onPressed: () => context.canPop() ? context.pop() : context.go(Routes.applications),
+            onPressed: () => context.canPop()
+                ? context.pop()
+                : context.go(Routes.applications),
             icon: const GtIcon(GtIcons.back, size: 18),
             label: const Text('Applications'),
           ),
@@ -81,9 +91,21 @@ class _Workspace extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(flex: 7, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: main)),
+              Expanded(
+                flex: 7,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: main,
+                ),
+              ),
               const SizedBox(width: GtSpace.xl),
-              Expanded(flex: 5, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: side)),
+              Expanded(
+                flex: 5,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: side,
+                ),
+              ),
             ],
           )
         else ...[
@@ -115,15 +137,27 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(app.institutionName, style: t.titleMedium?.copyWith(color: context.gt.textSecondary)),
+              Text(
+                app.institutionName,
+                style: t.titleMedium?.copyWith(color: context.gt.textSecondary),
+              ),
               const SizedBox(height: GtSpace.xs),
               Semantics(
                 header: true,
-                child: Text('${app.degreeLabel} ${app.programmeName}', style: t.headlineMedium),
+                child: Text(
+                  '${app.degreeLabel} ${app.programmeName}',
+                  style: t.headlineMedium,
+                ),
               ),
               if (app.department != null || app.researchArea != null) ...[
                 const SizedBox(height: GtSpace.xs),
-                Text([app.department, app.researchArea].whereType<String>().join(' · '), style: t.bodyMedium),
+                Text(
+                  [
+                    app.department,
+                    app.researchArea,
+                  ].whereType<String>().join(' · '),
+                  style: t.bodyMedium,
+                ),
               ],
             ],
           ),
@@ -161,10 +195,18 @@ class _StageMenu extends ConsumerWidget {
       onSelected: (stage) async {
         final messenger = ScaffoldMessenger.of(context);
         try {
-          await ref.read(applicationsControllerProvider.notifier).updateStage(app.id, stage);
-          messenger.showSnackBar(SnackBar(content: Text('Moved to ${stage.label}')));
+          await ref
+              .read(applicationsControllerProvider.notifier)
+              .updateStage(app.id, stage);
+          messenger.showSnackBar(
+            SnackBar(content: Text('Moved to ${stage.label}')),
+          );
         } catch (e) {
-          messenger.showSnackBar(SnackBar(content: Text("Couldn't update stage. ${describeError(e)}")));
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text("Couldn't update stage. ${describeError(e)}"),
+            ),
+          );
         }
       },
       itemBuilder: (_) => [
@@ -176,7 +218,10 @@ class _StageMenu extends ConsumerWidget {
                 Container(
                   width: 10,
                   height: 10,
-                  decoration: BoxDecoration(color: s.tone(gt).fg, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: s.tone(gt).fg,
+                    shape: BoxShape.circle,
+                  ),
                 ),
                 const SizedBox(width: GtSpace.md),
                 Text(s.label),
@@ -185,12 +230,22 @@ class _StageMenu extends ConsumerWidget {
           ),
       ],
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: GtSpace.lg, vertical: 10),
-        decoration: BoxDecoration(color: tone.bg, borderRadius: BorderRadius.circular(GtRadius.md)),
+        padding: const EdgeInsets.symmetric(
+          horizontal: GtSpace.lg,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: tone.bg,
+          borderRadius: BorderRadius.circular(GtRadius.md),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(app.stage.label, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: tone.fg)),
+            Text(
+              app.stage.label,
+              style: Theme.of(context).textTheme.labelLarge
+                  ?.copyWith(color: tone.fg),
+            ),
             const SizedBox(width: GtSpace.sm),
             GtIcon(GtIcons.chevronDown, color: tone.fg, size: 18),
           ],
@@ -210,23 +265,36 @@ class _DeadlineCard extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final gt = context.gt;
     Widget row(String label, Deadline d) => Padding(
-          padding: const EdgeInsets.only(top: GtSpace.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.only(top: GtSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: t.bodySmall),
+          const SizedBox(height: 2),
+          Row(
             children: [
-              Text(label, style: t.bodySmall),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  Expanded(child: Text(d.zoneLabel, style: t.titleMedium)),
-                  if (app.stage.isPreSubmission)
-                    ToneChip(label: DueText.relative(d.instant), tone: d.instant.dueTone(gt)),
-                ],
-              ),
-              if (d.differsFromLocal) Text('${d.localLabel} your time · ${d.zone}', style: t.bodySmall),
+              Expanded(child: Text(d.zoneLabel, style: t.titleMedium)),
+              if (app.stage.isPreSubmission)
+                ToneChip(label: d.dueLabel(), tone: d.instant.dueTone(gt)),
             ],
           ),
-        );
+          if (d.differsFromLocal)
+            Text('${d.localLabel} your time · ${d.zone}', style: t.bodySmall),
+        ],
+      ),
+    );
+
+    Widget dateRow(String label, ApproxDate d) => Padding(
+      padding: const EdgeInsets.only(top: GtSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: t.bodySmall),
+          const SizedBox(height: 2),
+          Text(d.label, style: t.titleMedium),
+        ],
+      ),
+    );
 
     return Card(
       child: Padding(
@@ -246,8 +314,12 @@ class _DeadlineCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: GtSpace.md),
                 child: Text('No deadline recorded yet.', style: t.bodyMedium),
               ),
+            if (app.opensOn != null) dateRow('Applications open', app.opensOn!),
             if (app.deadline != null) row('Application', app.deadline!),
-            if (app.fundingDeadline != null) row('Funding / scholarship', app.fundingDeadline!),
+            if (app.fundingDeadline != null)
+              row('Funding / scholarship', app.fundingDeadline!),
+            if (app.decisionExpected != null)
+              dateRow('Decision expected', app.decisionExpected!),
           ],
         ),
       ),
@@ -266,9 +338,26 @@ class _DetailsCard extends StatelessWidget {
     final rows = <(String, String)>[
       ('Degree', app.degreeLabel),
       if (app.country != null) ('Country', app.country!),
-      ('Priority', switch (app.priority) { 1 => 'Top choice', 2 => 'Normal', _ => 'Backup' }),
+      (
+        'Priority',
+        switch (app.priority) {
+          1 => 'Top choice',
+          2 => 'Normal',
+          _ => 'Backup',
+        },
+      ),
       if (app.programmeUrl != null) ('Programme page', app.programmeUrl!),
       if (app.portalUrl != null) ('Portal', app.portalUrl!),
+      if (app.portalUsername != null) ('Portal username', app.portalUsername!),
+      if (app.feeAmount != null)
+        ('Application fee', '${app.feeCurrency} ${_money(app.feeAmount!)}'),
+      if (app.feeWaiver != FeeWaiver.none) ('Fee waiver', app.feeWaiver.label),
+      if (app.tuitionAmount != null)
+        (
+          'Tuition / year',
+          '${app.tuitionCurrency} ${_money(app.tuitionAmount!)}',
+        ),
+      if (app.notes != null) ('Notes', app.notes!),
     ];
     return Card(
       child: Padding(
@@ -290,7 +379,10 @@ class _DetailsCard extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(width: 120, child: Text(label, style: t.bodySmall)),
+                    SizedBox(
+                      width: 120,
+                      child: Text(label, style: t.bodySmall),
+                    ),
                     Expanded(child: SelectableText(value, style: t.bodyMedium)),
                   ],
                 ),
@@ -302,45 +394,6 @@ class _DetailsCard extends StatelessWidget {
   }
 }
 
-class _ChecklistPlaceholder extends StatelessWidget {
-  const _ChecklistPlaceholder({required this.app});
-
-  final Application app;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    final gt = context.gt;
-    final r = app.readiness;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(GtSpace.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                IconWell(icon: GtIcons.checklist, tone: gt.success, size: 36),
-                const SizedBox(width: GtSpace.md),
-                Expanded(child: Text('Checklist & letters', style: t.titleMedium)),
-                if (r != null) Text('${(r * 100).round()}% ready', style: t.labelLarge),
-              ],
-            ),
-            if (r != null) ...[
-              const SizedBox(height: GtSpace.md),
-              ProgressBar(value: r),
-            ],
-            const SizedBox(height: GtSpace.lg),
-            Text(
-              '${app.requirementsDone} of ${app.requirementsTotal} requirements done · '
-              '${app.lettersSubmitted} of ${app.lettersTotal} letters submitted',
-              style: t.bodyMedium,
-            ),
-            const SizedBox(height: GtSpace.md),
-            Text('Editable checklist and letter tracking arrive in week 2.', style: t.bodySmall),
-          ],
-        ),
-      ),
-    );
-  }
-}
+String _money(double v) => NumberFormat.decimalPatternDigits(
+  decimalDigits: v == v.roundToDouble() ? 0 : 2,
+).format(v);

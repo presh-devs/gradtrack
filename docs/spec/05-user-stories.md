@@ -63,4 +63,4 @@ Priority: **P0** = must ship by 2 Nov · **P1** = ship if time allows, else firs
 
 **US-17 (P1) Export.** I download all my data as JSON.
 
-**US-18 (P1) Install.** I install GradTrack to my home screen/desktop and it opens standalone.
+**US-18 (P1) Install.** I install gradll to my home screen/desktop and it opens standalone.

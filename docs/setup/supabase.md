@@ -6,7 +6,7 @@ About 15 minutes. Steps marked **you** need your Supabase account or credentials
 
 1. Go to <https://supabase.com/dashboard> and sign in (GitHub sign-in is fine).
 2. **New project**:
-   - **Name:** `gradtrack`
+   - **Name:** `gradll`
    - **Database password:** use **Generate a password** and save it in your password manager. You need it once, in step 3.
    - **Region:** the one closest to you. From Nigeria, a European region such as London (`eu-west-2`) or Frankfurt (`eu-central-1`) is usually closest.
    - **Plan:** Free.
@@ -71,7 +71,7 @@ Open <http://localhost:8080> and sign in with your email. Opening the magic link
 
 ## 5. Invite-only sign-ups
 
-Sign-ups are **on but invite-only**. Before Supabase creates any account, it calls `public.hook_before_user_created`, which only allows emails listed in `public.signup_allowlist` (migration `20261014000005`). Anyone else sees *"GradTrack is invite-only…"*, and no account is created and no email is sent. Existing accounts, including yours, aren't affected.
+Sign-ups are **on but invite-only**. Before Supabase creates any account, it calls `public.hook_before_user_created`, which only allows emails listed in `public.signup_allowlist` (migration `20261014000005`). Anyone else sees *"gradll is invite-only…"*, and no account is created and no email is sent. Existing accounts, including yours, aren't affected.
 
 Apply it with migrations **first**, then config, because the hook function must exist before Auth is told to call it:
 
@@ -89,12 +89,12 @@ supabase config push
 insert into public.signup_allowlist (email, note) values ('friend@example.com', 'Ada');
 ```
 
-They then open GradTrack and sign in with that email. Each person gets their own private workspace; nobody can see anyone else's applications.
+They then open gradll and sign in with that email. Each person gets their own private workspace; nobody can see anyone else's applications.
 
 **Before friends can actually use it**, two more things are needed (planned for week 3):
 
 1. **A public URL.** The app currently runs only on your machine (`localhost:8080`). Deploy the web build (Cloudflare Pages or Netlify), add its URL to `additional_redirect_urls` in `supabase/config.toml`, and run `supabase config push`.
-2. **Real email delivery.** Supabase's built-in sender only emails project team members, so friends would never receive their sign-in link. Set up custom SMTP (Resend, the same service the daily digest uses) under *Authentication → Emails → SMTP*.
+2. **Real email delivery.** Supabase's built-in sender only emails project team members, so friends would never receive their sign-in link. Follow [email.md](email.md): one domain and one Resend account cover both sign-in links and the daily digest.
 
 ## 6. Import your spreadsheet
 
@@ -107,7 +107,7 @@ They then open GradTrack and sign in with that email. Each person gets their own
 | App still says "Demo data" | `env.json` missing or empty; rebuild with `tool/run_web.sh`. |
 | Magic link opens but you're not signed in | The URL you opened the app on must be in `additional_redirect_urls`; run `supabase config push`. |
 | "Email rate limit exceeded" | Wait an hour, or configure custom SMTP (*Authentication → Emails → SMTP*). |
-| A friend sees "GradTrack is invite-only" | Their exact email isn't in `signup_allowlist` (check for typos or a different address). |
+| A friend sees "gradll is invite-only" | Their exact email isn't in `signup_allowlist` (check for typos or a different address). |
 | Sign-up fails with "Error running hook URI" | `supabase config push` ran before `supabase db push`; push the migrations. |
 | `db push` says a migration already ran | Someone ran SQL by hand. `supabase migration list` shows local and remote; ask before using `migration repair`. |
 | Free project paused | Free projects pause after a period of inactivity. Restore it from the dashboard. |

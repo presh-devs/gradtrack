@@ -38,6 +38,24 @@ class ApplicationsController extends _$ApplicationsController {
       rethrow;
     }
   }
+
+  /// Keeps the list's progress counters in step with a checklist edited on
+  /// the application page, without refetching every application.
+  void setLetterCounts(String id, int submitted, int total) {
+    final apps = state.value;
+    if (apps == null) return;
+    state = AsyncData([
+      for (final a in apps) a.id == id ? a.copyWith(lettersSubmitted: submitted, lettersTotal: total) : a,
+    ]);
+  }
+
+  void setChecklistCounts(String id, int done, int total) {
+    final apps = state.value;
+    if (apps == null) return;
+    state = AsyncData([
+      for (final a in apps) a.id == id ? a.copyWith(requirementsDone: done, requirementsTotal: total) : a,
+    ]);
+  }
 }
 
 /// Derived, not fetched: watches the cached list and picks one application.

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/theme/icons.dart';
 import '../core/env.dart';
 import '../core/theme/tokens.dart';
+import '../features/settings/presentation/profile_controller.dart';
 
 class _Destination {
   const _Destination(this.label, this.icon, this.selectedIcon);
@@ -22,7 +24,7 @@ const _destinations = [
 
 /// Responsive navigation: side rail on wide screens, bottom bar on narrow.
 /// Each tab keeps its own navigation stack (StatefulShellRoute).
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.shell});
 
   final StatefulNavigationShell shell;
@@ -30,7 +32,10 @@ class AppShell extends StatelessWidget {
   void _go(int index) => shell.goBranch(index, initialLocation: index == shell.currentIndex);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Loads the profile once signed in, which moves a never-edited profile
+    // from UTC to this device's zone so the digest arrives at local 07:00.
+    ref.listen(profileControllerProvider, (_, _) {});
     final width = MediaQuery.sizeOf(context).width;
     final gt = context.gt;
 
@@ -135,7 +140,7 @@ class BrandMark extends StatelessWidget {
         if (showName) ...[
           const SizedBox(width: GtSpace.md),
           Text(
-            'GradTrack',
+            'gradll',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w900,
                   color: onDark ? Colors.white : null,

@@ -2,7 +2,7 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "gradtrack"
+project_id = "gradll"
 
 [api]
 enabled = true
@@ -162,7 +162,7 @@ site_url = "http://localhost:8080"
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = ["http://localhost:8080/**", "http://127.0.0.1:8080/**"]
-# Add the production URL (e.g. "https://gradtrack.pages.dev/**") once deployed, then `supabase config push`.
+# Add the production URL (e.g. "https://gradll.pages.dev/**") once deployed, then `supabase config push`.
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -200,7 +200,8 @@ password_requirements = ""
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2
+# 30 covers sign-in links for a handful of invited friends (docs/setup/email.md).
+email_sent = 30
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -416,3 +417,8 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# The digest is called by pg_cron with a shared secret (not a JWT) and by
+# Settings with the user's JWT; the function checks both itself.
+[functions.send-digests]
+verify_jwt = false

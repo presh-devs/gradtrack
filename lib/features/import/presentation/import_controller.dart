@@ -75,6 +75,8 @@ class ImportWizard extends _$ImportWizard {
   /// Maps [column] to [field] (null = don't import). A field can only be used
   /// once, so assigning it here unassigns it elsewhere.
   void mapColumn(int column, ImportField? field) {
+    final header = state.table?.headers.elementAtOrNull(column) ?? '';
+    if (field != null && isSecretHeader(header)) return; // passwords are never imported
     final next = {...state.mapping}..removeWhere((c, f) => c == column || f == field);
     if (field != null) next[column] = field;
     state = state.copyWith(mapping: next);

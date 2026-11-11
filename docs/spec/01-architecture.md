@@ -113,7 +113,7 @@ Source: Figma `Innixx-Mobile-v3.0-2026`. Colour palette is node 111:1757, iconog
 
 ## PWA
 
-- `web/manifest.json`: name, short_name `GradTrack`, theme colour, 192/512 and maskable icons, `display: standalone`.
+- `web/manifest.json`: name, short_name `gradll`, theme colour, 192/512 and maskable icons, `display: standalone`.
 - Online-only with cached reads. No offline writes in MVP-0. Show a clear offline banner.
 - Check the current Flutter version's service-worker behaviour at scaffold time. Recent Flutter releases have been moving away from the generated service worker, and it matters for installability and, later, for push.
 

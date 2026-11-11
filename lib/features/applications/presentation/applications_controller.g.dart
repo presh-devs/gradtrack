@@ -46,7 +46,7 @@ final class ApplicationsControllerProvider
 }
 
 String _$applicationsControllerHash() =>
-    r'6f3d6891fe8244ea59b731c07a7492c0b5659ee3';
+    r'1e60958a26155b10de877237dc006ed0bb5aa830';
 
 /// The cached list of active applications — the single source of truth on the
 /// client. Kept alive so moving between tabs never refetches; screens that

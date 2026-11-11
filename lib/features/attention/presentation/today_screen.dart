@@ -162,7 +162,7 @@ class _NextDeadlineCard extends ConsumerWidget {
             style: t.titleMedium?.copyWith(color: onHeroMuted),
           ),
           const SizedBox(height: GtSpace.sm),
-          Text(DueText.relative(d.instant), style: t.displaySmall?.copyWith(color: onHero)),
+          Text(d.dueLabel(), style: t.displaySmall?.copyWith(color: onHero)),
           const SizedBox(height: GtSpace.sm),
           Text(
             d.differsFromLocal ? '${d.zoneLabel}  ·  ${d.localLabel} your time' : d.zoneLabel,
@@ -404,7 +404,7 @@ class _Group extends StatelessWidget {
   }
 }
 
-class _AttentionTile extends StatelessWidget {
+class _AttentionTile extends ConsumerWidget {
   const _AttentionTile({required this.item});
 
   final AttentionItem item;
@@ -416,23 +416,42 @@ class _AttentionTile extends StatelessWidget {
         AttentionType.letter => (GtIcons.letter, gt.warning),
         AttentionType.followUp => (GtIcons.followUp, gt.info),
         AttentionType.task => (GtIcons.task, gt.neutral),
+        AttentionType.applicationOpens => (GtIcons.thisWeek, gt.success),
       };
 
+  Future<void> _act(BuildContext context, WidgetRef ref, TodayAction action) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(todayControllerProvider.notifier).act(item, action);
+      messenger.showSnackBar(SnackBar(content: Text(switch (action) {
+        TodayAction.requirementDone => '“${item.title}” ticked off',
+        TodayAction.letterSubmitted => 'Letter marked submitted',
+        TodayAction.replied => 'Reply logged',
+        TodayAction.followedUp => 'Follow-up logged. Next reminder in 2 weeks',
+      })));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Couldn’t save. ${describeError(e)}')));
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final gt = context.gt;
     final t = Theme.of(context).textTheme;
     final (icon, tone) = _style(gt);
-    final due = DueText.relative(item.dueAt);
+    final actions = TodayAction.forType(item.type);
+    final due = item.type == AttentionType.applicationOpens && item.dueAt.isBefore(DateTime.now())
+        ? 'Open now'
+        : DueText.relative(item.dueAt).replaceFirst('Due ', item.type == AttentionType.applicationOpens ? 'Opens ' : 'Due ');
     final appId = item.applicationId;
     final compact = MediaQuery.sizeOf(context).width < GtBreakpoints.medium;
 
     return InkWell(
-      onTap: appId == null
-          ? () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Professors and tasks arrive in week 3.')),
-              )
-          : () => context.go(Routes.application(appId)),
+      onTap: appId != null
+          ? () => context.go(Routes.application(appId))
+          : item.professorId != null
+              ? () => context.go(Routes.people)
+              : null,
       child: Semantics(
         label: '${item.title}. ${item.reason}. $due',
         excludeSemantics: true,
@@ -464,8 +483,29 @@ class _AttentionTile extends StatelessWidget {
                 const SizedBox(width: GtSpace.md),
                 ToneChip(label: due, tone: item.dueAt.dueTone(gt)),
               ],
-              const SizedBox(width: GtSpace.xs),
-              GtIcon(GtIcons.chevronRight, color: gt.textMuted),
+              if (actions.isNotEmpty) ...[
+                const SizedBox(width: GtSpace.sm),
+                OutlinedButton(
+                  onPressed: () => _act(context, ref, actions.first),
+                  child: Text(actions.first.label),
+                ),
+                if (actions.length > 1)
+                  PopupMenuButton<TodayAction>(
+                    tooltip: 'More',
+                    icon: GtIcon(GtIcons.more, size: 18, color: gt.textMuted),
+                    onSelected: (a) => _act(context, ref, a),
+                    itemBuilder: (_) => [
+                      for (final a in actions.skip(1))
+                        PopupMenuItem(
+                          value: a,
+                          child: Text(a == TodayAction.followedUp ? 'I sent a follow-up' : a.label),
+                        ),
+                    ],
+                  ),
+              ] else ...[
+                const SizedBox(width: GtSpace.xs),
+                GtIcon(GtIcons.chevronRight, color: gt.textMuted),
+              ],
             ],
           ),
         ),

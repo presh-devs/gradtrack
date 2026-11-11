@@ -189,7 +189,7 @@ class _SourceStepState extends ConsumerState<_SourceStep> {
                   child: Text(_picking ? 'Opening…' : 'Choose file'),
                 ),
                 TextButton.icon(
-                  onPressed: () => downloadTextFile('gradtrack-template.csv', buildTemplateCsv()),
+                  onPressed: () => downloadTextFile('gradll-template.csv', buildTemplateCsv()),
                   icon: const GtIcon(GtIcons.download, size: 18),
                   label: const Text('Download template'),
                 ),
@@ -283,9 +283,36 @@ class _ColumnsStep extends ConsumerWidget {
       return col != null && table.rows.any((r) => isAmbiguousNumericDate(r[col]));
     });
 
+    final secretColumns = [
+      for (var c = 0; c < table.headers.length; c++)
+        if (isSecretHeader(table.headers[c])) table.headers[c],
+    ];
+    final notesHoldRequirements = !wizard.mapping.containsValue(ImportField.requirements) &&
+        wizard.mapping.entries
+            .where((e) => e.value == ImportField.notes)
+            .any((e) => parseRequirements(table.sample(e.key)).length >= 3);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (secretColumns.isNotEmpty) ...[
+          _Banner(
+            tone: gt.warning,
+            icon: GtIcons.info,
+            text: '${secretColumns.join(', ')} won’t be imported. gradll keeps the portal link and username, '
+                'never passwords. Move them to a password manager, and change any you reuse across portals.',
+          ),
+          const SizedBox(height: GtSpace.lg),
+        ],
+        if (notesHoldRequirements) ...[
+          _Banner(
+            tone: gt.info,
+            icon: GtIcons.checklist,
+            text: 'Your Notes column looks like a list of required documents. '
+                'Map it to “Requirements” to turn each item into a checklist entry.',
+          ),
+          const SizedBox(height: GtSpace.lg),
+        ],
         if (wizard.missingRequired.isNotEmpty) ...[
           _Banner(
             tone: gt.danger,
@@ -310,7 +337,8 @@ class _ColumnsStep extends ConsumerWidget {
                   if (c > 0) const Divider(height: GtSpace.xl),
                   _ColumnRow(
                     header: table.headers[c].isEmpty ? 'Column ${c + 1}' : table.headers[c],
-                    sample: table.sample(c),
+                    sample: isSecretHeader(table.headers[c]) ? 'Hidden · never imported' : table.sample(c),
+                    locked: isSecretHeader(table.headers[c]),
                     value: wizard.mapping[c],
                     wide: wide,
                     onChanged: (f) => notifier.mapColumn(c, f),
@@ -358,7 +386,10 @@ class _ColumnsStep extends ConsumerWidget {
                   value: wizard.seedRequirements,
                   onChanged: notifier.setSeedRequirements,
                   title: Text('Add common requirements', style: t.titleSmall),
-                  subtitle: const Text('Transcript, CV, statement of purpose, English test and fee on each application.'),
+                  subtitle: const Text(
+                    'Transcript, CV, statement of purpose, English test and fee on each application. '
+                    'Rows with their own Requirements use those instead.',
+                  ),
                 ),
               ],
             ),
@@ -376,8 +407,11 @@ class _ColumnRow extends StatelessWidget {
     required this.value,
     required this.wide,
     required this.onChanged,
+    this.locked = false,
   });
 
+  /// Secret column (password): can't be mapped to anything.
+  final bool locked;
   final String header;
   final String sample;
   final ImportField? value;
@@ -393,7 +427,7 @@ class _ColumnRow extends StatelessWidget {
       children: [
         Text(header, style: t.titleSmall, overflow: TextOverflow.ellipsis),
         Text(
-          sample.isEmpty ? 'Empty' : 'e.g. $sample',
+          sample.isEmpty ? 'Empty' : (locked ? sample : 'e.g. $sample'),
           style: t.bodySmall,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -403,6 +437,7 @@ class _ColumnRow extends StatelessWidget {
     final picker = LayoutBuilder(
       builder: (context, c) => DropdownMenu<ImportField?>(
         width: c.maxWidth,
+        enabled: !locked,
         initialSelection: value,
         key: ValueKey(value), // re-sync when another row takes this field
         requestFocusOnTap: false,
@@ -526,7 +561,7 @@ class _Summary extends StatelessWidget {
         if (count(RowStatus.invalid) > 0)
           ToneChip(label: '${count(RowStatus.invalid)} need fixing', tone: gt.danger, icon: GtIcons.error),
         if (count(RowStatus.duplicate) > 0)
-          ToneChip(label: '${count(RowStatus.duplicate)} already in GradTrack', tone: gt.neutral, icon: GtIcons.copy),
+          ToneChip(label: '${count(RowStatus.duplicate)} already in gradll', tone: gt.neutral, icon: GtIcons.copy),
         if (warnings > 0) ToneChip(label: '$warnings with notes', tone: gt.warning, icon: GtIcons.info),
       ],
     );
@@ -546,7 +581,7 @@ class _RowTile extends StatelessWidget {
     final (icon, tone, status) = switch (row.status) {
       RowStatus.ready => (GtIcons.check, gt.success, 'Ready'),
       RowStatus.invalid => (GtIcons.error, gt.danger, 'Skipped'),
-      RowStatus.duplicate => (GtIcons.copy, gt.neutral, 'Already in GradTrack'),
+      RowStatus.duplicate => (GtIcons.copy, gt.neutral, 'Already in gradll'),
     };
     final deadline = d.deadline.toDeadline();
     final title = [

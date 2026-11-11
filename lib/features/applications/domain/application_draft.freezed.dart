@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DeadlineInput {
 
- DateTime? get date; int get hour; int get minute; String? get zone;
+ DateTime? get date; int get hour; int get minute; String? get zone;/// Only the month is known; day and time are ignored.
+ bool get monthOnly;
 /// Create a copy of DeadlineInput
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +28,20 @@ $DeadlineInputCopyWith<DeadlineInput> get copyWith => _$DeadlineInputCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as DeadlineInput;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeadlineInput&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.hour, _this.hour) || other.hour == _this.hour)&&(identical(other.minute, _this.minute) || other.minute == _this.minute)&&(identical(other.zone, _this.zone) || other.zone == _this.zone));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeadlineInput&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.hour, _this.hour) || other.hour == _this.hour)&&(identical(other.minute, _this.minute) || other.minute == _this.minute)&&(identical(other.zone, _this.zone) || other.zone == _this.zone)&&(identical(other.monthOnly, _this.monthOnly) || other.monthOnly == _this.monthOnly));
 }
 
 
 @override
 int get hashCode {
   final _this = this as DeadlineInput;
-  return Object.hash(runtimeType,_this.date,_this.hour,_this.minute,_this.zone);
+  return Object.hash(runtimeType,_this.date,_this.hour,_this.minute,_this.zone,_this.monthOnly);
 }
 
 @override
 String toString() {
   final _this = this as DeadlineInput;
-  return 'DeadlineInput(date: ${_this.date}, hour: ${_this.hour}, minute: ${_this.minute}, zone: ${_this.zone})';
+  return 'DeadlineInput(date: ${_this.date}, hour: ${_this.hour}, minute: ${_this.minute}, zone: ${_this.zone}, monthOnly: ${_this.monthOnly})';
 }
 
 
@@ -51,7 +52,7 @@ abstract mixin class $DeadlineInputCopyWith<$Res>  {
   factory $DeadlineInputCopyWith(DeadlineInput value, $Res Function(DeadlineInput) _then) = _$DeadlineInputCopyWithImpl;
 @useResult
 $Res call({
- DateTime? date, int hour, int minute, String? zone
+ DateTime? date, int hour, int minute, String? zone, bool monthOnly
 });
 
 
@@ -68,13 +69,14 @@ class _$DeadlineInputCopyWithImpl<$Res>
 
 /// Create a copy of DeadlineInput
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? date = freezed,Object? hour = null,Object? minute = null,Object? zone = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? date = freezed,Object? hour = null,Object? minute = null,Object? zone = freezed,Object? monthOnly = null,}) {
   return _then(DeadlineInput(
 date: freezed == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime?,hour: null == hour ? _self.hour : hour // ignore: cast_nullable_to_non_nullable
 as int,minute: null == minute ? _self.minute : minute // ignore: cast_nullable_to_non_nullable
 as int,zone: freezed == zone ? _self.zone : zone // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,monthOnly: null == monthOnly ? _self.monthOnly : monthOnly // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -159,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime? date,  int hour,  int minute,  String? zone)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime? date,  int hour,  int minute,  String? zone,  bool monthOnly)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DeadlineInput() when $default != null:
-return $default(_that.date,_that.hour,_that.minute,_that.zone);case _:
+return $default(_that.date,_that.hour,_that.minute,_that.zone,_that.monthOnly);case _:
   return orElse();
 
 }
@@ -180,10 +182,10 @@ return $default(_that.date,_that.hour,_that.minute,_that.zone);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime? date,  int hour,  int minute,  String? zone)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime? date,  int hour,  int minute,  String? zone,  bool monthOnly)  $default,) {final _that = this;
 switch (_that) {
 case _DeadlineInput():
-return $default(_that.date,_that.hour,_that.minute,_that.zone);case _:
+return $default(_that.date,_that.hour,_that.minute,_that.zone,_that.monthOnly);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +202,10 @@ return $default(_that.date,_that.hour,_that.minute,_that.zone);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime? date,  int hour,  int minute,  String? zone)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime? date,  int hour,  int minute,  String? zone,  bool monthOnly)?  $default,) {final _that = this;
 switch (_that) {
 case _DeadlineInput() when $default != null:
-return $default(_that.date,_that.hour,_that.minute,_that.zone);case _:
+return $default(_that.date,_that.hour,_that.minute,_that.zone,_that.monthOnly);case _:
   return null;
 
 }
@@ -215,13 +217,15 @@ return $default(_that.date,_that.hour,_that.minute,_that.zone);case _:
 
 
 class _DeadlineInput extends DeadlineInput {
-  const _DeadlineInput({this.date, this.hour = 23, this.minute = 59, this.zone}): super._();
+  const _DeadlineInput({this.date, this.hour = 23, this.minute = 59, this.zone, this.monthOnly = false}): super._();
   
 
 @override final  DateTime? date;
 @override@JsonKey() final  int hour;
 @override@JsonKey() final  int minute;
 @override final  String? zone;
+/// Only the month is known; day and time are ignored.
+@override@JsonKey() final  bool monthOnly;
 
 /// Create a copy of DeadlineInput
 /// with the given fields replaced by the non-null parameter values.
@@ -233,18 +237,18 @@ _$DeadlineInputCopyWith<_DeadlineInput> get copyWith => __$DeadlineInputCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DeadlineInput&&(identical(other.date, date) || other.date == date)&&(identical(other.hour, hour) || other.hour == hour)&&(identical(other.minute, minute) || other.minute == minute)&&(identical(other.zone, zone) || other.zone == zone));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DeadlineInput&&(identical(other.date, date) || other.date == date)&&(identical(other.hour, hour) || other.hour == hour)&&(identical(other.minute, minute) || other.minute == minute)&&(identical(other.zone, zone) || other.zone == zone)&&(identical(other.monthOnly, monthOnly) || other.monthOnly == monthOnly));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,date,hour,minute,zone);
+    return Object.hash(runtimeType,date,hour,minute,zone,monthOnly);
 }
 
 @override
 String toString() {
-    return 'DeadlineInput(date: $date, hour: $hour, minute: $minute, zone: $zone)';
+    return 'DeadlineInput(date: $date, hour: $hour, minute: $minute, zone: $zone, monthOnly: $monthOnly)';
 }
 
 
@@ -255,7 +259,7 @@ abstract mixin class _$DeadlineInputCopyWith<$Res> implements $DeadlineInputCopy
   factory _$DeadlineInputCopyWith(_DeadlineInput value, $Res Function(_DeadlineInput) _then) = __$DeadlineInputCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime? date, int hour, int minute, String? zone
+ DateTime? date, int hour, int minute, String? zone, bool monthOnly
 });
 
 
@@ -272,13 +276,14 @@ class __$DeadlineInputCopyWithImpl<$Res>
 
 /// Create a copy of DeadlineInput
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? date = freezed,Object? hour = null,Object? minute = null,Object? zone = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? date = freezed,Object? hour = null,Object? minute = null,Object? zone = freezed,Object? monthOnly = null,}) {
   return _then(_DeadlineInput(
 date: freezed == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime?,hour: null == hour ? _self.hour : hour // ignore: cast_nullable_to_non_nullable
 as int,minute: null == minute ? _self.minute : minute // ignore: cast_nullable_to_non_nullable
 as int,zone: freezed == zone ? _self.zone : zone // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,monthOnly: null == monthOnly ? _self.monthOnly : monthOnly // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -289,7 +294,9 @@ as String?,
 mixin _$ApplicationDraft {
 
 /// Existing institution, or null to create one named [institutionName].
- String? get institutionId; String get institutionName; String? get institutionCountry; String get programmeName; DegreeType get degree; ApplicationStage get stage; int get priority; DeadlineInput get deadline; DeadlineInput get fundingDeadline; String? get department; String? get researchArea; String? get programmeUrl; String? get portalUrl; String? get portalUsername; String? get fundingUrl; String? get feeAmount; String? get feeCurrency; FeeWaiver get feeWaiver; String? get notes;
+ String? get institutionId; String get institutionName; String? get institutionCountry; String get programmeName; DegreeType get degree; ApplicationStage get stage; int get priority; DeadlineInput get deadline; DeadlineInput get fundingDeadline; String? get department; String? get researchArea; String? get programmeUrl; String? get portalUrl; String? get portalUsername; String? get fundingUrl; String? get feeAmount; String? get feeCurrency; FeeWaiver get feeWaiver; String? get tuitionAmount; String? get tuitionCurrency; ApproxDate? get opensOn; ApproxDate? get decisionExpected; String? get notes;/// Checklist to create along with the application. Only used on create
+/// (import); the form doesn't edit it.
+ List<RequirementSeed> get requirements;
 /// Create a copy of ApplicationDraft
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -301,20 +308,20 @@ $ApplicationDraftCopyWith<ApplicationDraft> get copyWith => _$ApplicationDraftCo
 @override
 bool operator ==(Object other) {
   final _this = this as ApplicationDraft;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ApplicationDraft&&(identical(other.institutionId, _this.institutionId) || other.institutionId == _this.institutionId)&&(identical(other.institutionName, _this.institutionName) || other.institutionName == _this.institutionName)&&(identical(other.institutionCountry, _this.institutionCountry) || other.institutionCountry == _this.institutionCountry)&&(identical(other.programmeName, _this.programmeName) || other.programmeName == _this.programmeName)&&(identical(other.degree, _this.degree) || other.degree == _this.degree)&&(identical(other.stage, _this.stage) || other.stage == _this.stage)&&(identical(other.priority, _this.priority) || other.priority == _this.priority)&&(identical(other.deadline, _this.deadline) || other.deadline == _this.deadline)&&(identical(other.fundingDeadline, _this.fundingDeadline) || other.fundingDeadline == _this.fundingDeadline)&&(identical(other.department, _this.department) || other.department == _this.department)&&(identical(other.researchArea, _this.researchArea) || other.researchArea == _this.researchArea)&&(identical(other.programmeUrl, _this.programmeUrl) || other.programmeUrl == _this.programmeUrl)&&(identical(other.portalUrl, _this.portalUrl) || other.portalUrl == _this.portalUrl)&&(identical(other.portalUsername, _this.portalUsername) || other.portalUsername == _this.portalUsername)&&(identical(other.fundingUrl, _this.fundingUrl) || other.fundingUrl == _this.fundingUrl)&&(identical(other.feeAmount, _this.feeAmount) || other.feeAmount == _this.feeAmount)&&(identical(other.feeCurrency, _this.feeCurrency) || other.feeCurrency == _this.feeCurrency)&&(identical(other.feeWaiver, _this.feeWaiver) || other.feeWaiver == _this.feeWaiver)&&(identical(other.notes, _this.notes) || other.notes == _this.notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ApplicationDraft&&(identical(other.institutionId, _this.institutionId) || other.institutionId == _this.institutionId)&&(identical(other.institutionName, _this.institutionName) || other.institutionName == _this.institutionName)&&(identical(other.institutionCountry, _this.institutionCountry) || other.institutionCountry == _this.institutionCountry)&&(identical(other.programmeName, _this.programmeName) || other.programmeName == _this.programmeName)&&(identical(other.degree, _this.degree) || other.degree == _this.degree)&&(identical(other.stage, _this.stage) || other.stage == _this.stage)&&(identical(other.priority, _this.priority) || other.priority == _this.priority)&&(identical(other.deadline, _this.deadline) || other.deadline == _this.deadline)&&(identical(other.fundingDeadline, _this.fundingDeadline) || other.fundingDeadline == _this.fundingDeadline)&&(identical(other.department, _this.department) || other.department == _this.department)&&(identical(other.researchArea, _this.researchArea) || other.researchArea == _this.researchArea)&&(identical(other.programmeUrl, _this.programmeUrl) || other.programmeUrl == _this.programmeUrl)&&(identical(other.portalUrl, _this.portalUrl) || other.portalUrl == _this.portalUrl)&&(identical(other.portalUsername, _this.portalUsername) || other.portalUsername == _this.portalUsername)&&(identical(other.fundingUrl, _this.fundingUrl) || other.fundingUrl == _this.fundingUrl)&&(identical(other.feeAmount, _this.feeAmount) || other.feeAmount == _this.feeAmount)&&(identical(other.feeCurrency, _this.feeCurrency) || other.feeCurrency == _this.feeCurrency)&&(identical(other.feeWaiver, _this.feeWaiver) || other.feeWaiver == _this.feeWaiver)&&(identical(other.tuitionAmount, _this.tuitionAmount) || other.tuitionAmount == _this.tuitionAmount)&&(identical(other.tuitionCurrency, _this.tuitionCurrency) || other.tuitionCurrency == _this.tuitionCurrency)&&(identical(other.opensOn, _this.opensOn) || other.opensOn == _this.opensOn)&&(identical(other.decisionExpected, _this.decisionExpected) || other.decisionExpected == _this.decisionExpected)&&(identical(other.notes, _this.notes) || other.notes == _this.notes)&&const DeepCollectionEquality().equals(other.requirements, _this.requirements));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ApplicationDraft;
-  return Object.hashAll([runtimeType,_this.institutionId,_this.institutionName,_this.institutionCountry,_this.programmeName,_this.degree,_this.stage,_this.priority,_this.deadline,_this.fundingDeadline,_this.department,_this.researchArea,_this.programmeUrl,_this.portalUrl,_this.portalUsername,_this.fundingUrl,_this.feeAmount,_this.feeCurrency,_this.feeWaiver,_this.notes]);
+  return Object.hashAll([runtimeType,_this.institutionId,_this.institutionName,_this.institutionCountry,_this.programmeName,_this.degree,_this.stage,_this.priority,_this.deadline,_this.fundingDeadline,_this.department,_this.researchArea,_this.programmeUrl,_this.portalUrl,_this.portalUsername,_this.fundingUrl,_this.feeAmount,_this.feeCurrency,_this.feeWaiver,_this.tuitionAmount,_this.tuitionCurrency,_this.opensOn,_this.decisionExpected,_this.notes,const DeepCollectionEquality().hash(_this.requirements)]);
 }
 
 @override
 String toString() {
   final _this = this as ApplicationDraft;
-  return 'ApplicationDraft(institutionId: ${_this.institutionId}, institutionName: ${_this.institutionName}, institutionCountry: ${_this.institutionCountry}, programmeName: ${_this.programmeName}, degree: ${_this.degree}, stage: ${_this.stage}, priority: ${_this.priority}, deadline: ${_this.deadline}, fundingDeadline: ${_this.fundingDeadline}, department: ${_this.department}, researchArea: ${_this.researchArea}, programmeUrl: ${_this.programmeUrl}, portalUrl: ${_this.portalUrl}, portalUsername: ${_this.portalUsername}, fundingUrl: ${_this.fundingUrl}, feeAmount: ${_this.feeAmount}, feeCurrency: ${_this.feeCurrency}, feeWaiver: ${_this.feeWaiver}, notes: ${_this.notes})';
+  return 'ApplicationDraft(institutionId: ${_this.institutionId}, institutionName: ${_this.institutionName}, institutionCountry: ${_this.institutionCountry}, programmeName: ${_this.programmeName}, degree: ${_this.degree}, stage: ${_this.stage}, priority: ${_this.priority}, deadline: ${_this.deadline}, fundingDeadline: ${_this.fundingDeadline}, department: ${_this.department}, researchArea: ${_this.researchArea}, programmeUrl: ${_this.programmeUrl}, portalUrl: ${_this.portalUrl}, portalUsername: ${_this.portalUsername}, fundingUrl: ${_this.fundingUrl}, feeAmount: ${_this.feeAmount}, feeCurrency: ${_this.feeCurrency}, feeWaiver: ${_this.feeWaiver}, tuitionAmount: ${_this.tuitionAmount}, tuitionCurrency: ${_this.tuitionCurrency}, opensOn: ${_this.opensOn}, decisionExpected: ${_this.decisionExpected}, notes: ${_this.notes}, requirements: ${_this.requirements})';
 }
 
 
@@ -325,7 +332,7 @@ abstract mixin class $ApplicationDraftCopyWith<$Res>  {
   factory $ApplicationDraftCopyWith(ApplicationDraft value, $Res Function(ApplicationDraft) _then) = _$ApplicationDraftCopyWithImpl;
 @useResult
 $Res call({
- String? institutionId, String institutionName, String? institutionCountry, String programmeName, DegreeType degree, ApplicationStage stage, int priority, DeadlineInput deadline, DeadlineInput fundingDeadline, String? department, String? researchArea, String? programmeUrl, String? portalUrl, String? portalUsername, String? fundingUrl, String? feeAmount, String? feeCurrency, FeeWaiver feeWaiver, String? notes
+ String? institutionId, String institutionName, String? institutionCountry, String programmeName, DegreeType degree, ApplicationStage stage, int priority, DeadlineInput deadline, DeadlineInput fundingDeadline, String? department, String? researchArea, String? programmeUrl, String? portalUrl, String? portalUsername, String? fundingUrl, String? feeAmount, String? feeCurrency, FeeWaiver feeWaiver, String? tuitionAmount, String? tuitionCurrency, ApproxDate? opensOn, ApproxDate? decisionExpected, String? notes, List<RequirementSeed> requirements
 });
 
 
@@ -342,7 +349,7 @@ class _$ApplicationDraftCopyWithImpl<$Res>
 
 /// Create a copy of ApplicationDraft
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? institutionId = freezed,Object? institutionName = null,Object? institutionCountry = freezed,Object? programmeName = null,Object? degree = null,Object? stage = null,Object? priority = null,Object? deadline = null,Object? fundingDeadline = null,Object? department = freezed,Object? researchArea = freezed,Object? programmeUrl = freezed,Object? portalUrl = freezed,Object? portalUsername = freezed,Object? fundingUrl = freezed,Object? feeAmount = freezed,Object? feeCurrency = freezed,Object? feeWaiver = null,Object? notes = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? institutionId = freezed,Object? institutionName = null,Object? institutionCountry = freezed,Object? programmeName = null,Object? degree = null,Object? stage = null,Object? priority = null,Object? deadline = null,Object? fundingDeadline = null,Object? department = freezed,Object? researchArea = freezed,Object? programmeUrl = freezed,Object? portalUrl = freezed,Object? portalUsername = freezed,Object? fundingUrl = freezed,Object? feeAmount = freezed,Object? feeCurrency = freezed,Object? feeWaiver = null,Object? tuitionAmount = freezed,Object? tuitionCurrency = freezed,Object? opensOn = freezed,Object? decisionExpected = freezed,Object? notes = freezed,Object? requirements = null,}) {
   return _then(ApplicationDraft(
 institutionId: freezed == institutionId ? _self.institutionId : institutionId // ignore: cast_nullable_to_non_nullable
 as String?,institutionName: null == institutionName ? _self.institutionName : institutionName // ignore: cast_nullable_to_non_nullable
@@ -362,8 +369,13 @@ as String?,fundingUrl: freezed == fundingUrl ? _self.fundingUrl : fundingUrl // 
 as String?,feeAmount: freezed == feeAmount ? _self.feeAmount : feeAmount // ignore: cast_nullable_to_non_nullable
 as String?,feeCurrency: freezed == feeCurrency ? _self.feeCurrency : feeCurrency // ignore: cast_nullable_to_non_nullable
 as String?,feeWaiver: null == feeWaiver ? _self.feeWaiver : feeWaiver // ignore: cast_nullable_to_non_nullable
-as FeeWaiver,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,
+as FeeWaiver,tuitionAmount: freezed == tuitionAmount ? _self.tuitionAmount : tuitionAmount // ignore: cast_nullable_to_non_nullable
+as String?,tuitionCurrency: freezed == tuitionCurrency ? _self.tuitionCurrency : tuitionCurrency // ignore: cast_nullable_to_non_nullable
+as String?,opensOn: freezed == opensOn ? _self.opensOn : opensOn // ignore: cast_nullable_to_non_nullable
+as ApproxDate?,decisionExpected: freezed == decisionExpected ? _self.decisionExpected : decisionExpected // ignore: cast_nullable_to_non_nullable
+as ApproxDate?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as String?,requirements: null == requirements ? _self.requirements : requirements // ignore: cast_nullable_to_non_nullable
+as List<RequirementSeed>,
   ));
 }
 /// Create a copy of ApplicationDraft
@@ -466,10 +478,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? institutionId,  String institutionName,  String? institutionCountry,  String programmeName,  DegreeType degree,  ApplicationStage stage,  int priority,  DeadlineInput deadline,  DeadlineInput fundingDeadline,  String? department,  String? researchArea,  String? programmeUrl,  String? portalUrl,  String? portalUsername,  String? fundingUrl,  String? feeAmount,  String? feeCurrency,  FeeWaiver feeWaiver,  String? notes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? institutionId,  String institutionName,  String? institutionCountry,  String programmeName,  DegreeType degree,  ApplicationStage stage,  int priority,  DeadlineInput deadline,  DeadlineInput fundingDeadline,  String? department,  String? researchArea,  String? programmeUrl,  String? portalUrl,  String? portalUsername,  String? fundingUrl,  String? feeAmount,  String? feeCurrency,  FeeWaiver feeWaiver,  String? tuitionAmount,  String? tuitionCurrency,  ApproxDate? opensOn,  ApproxDate? decisionExpected,  String? notes,  List<RequirementSeed> requirements)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ApplicationDraft() when $default != null:
-return $default(_that.institutionId,_that.institutionName,_that.institutionCountry,_that.programmeName,_that.degree,_that.stage,_that.priority,_that.deadline,_that.fundingDeadline,_that.department,_that.researchArea,_that.programmeUrl,_that.portalUrl,_that.portalUsername,_that.fundingUrl,_that.feeAmount,_that.feeCurrency,_that.feeWaiver,_that.notes);case _:
+return $default(_that.institutionId,_that.institutionName,_that.institutionCountry,_that.programmeName,_that.degree,_that.stage,_that.priority,_that.deadline,_that.fundingDeadline,_that.department,_that.researchArea,_that.programmeUrl,_that.portalUrl,_that.portalUsername,_that.fundingUrl,_that.feeAmount,_that.feeCurrency,_that.feeWaiver,_that.tuitionAmount,_that.tuitionCurrency,_that.opensOn,_that.decisionExpected,_that.notes,_that.requirements);case _:
   return orElse();
 
 }
@@ -487,10 +499,10 @@ return $default(_that.institutionId,_that.institutionName,_that.institutionCount
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? institutionId,  String institutionName,  String? institutionCountry,  String programmeName,  DegreeType degree,  ApplicationStage stage,  int priority,  DeadlineInput deadline,  DeadlineInput fundingDeadline,  String? department,  String? researchArea,  String? programmeUrl,  String? portalUrl,  String? portalUsername,  String? fundingUrl,  String? feeAmount,  String? feeCurrency,  FeeWaiver feeWaiver,  String? notes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? institutionId,  String institutionName,  String? institutionCountry,  String programmeName,  DegreeType degree,  ApplicationStage stage,  int priority,  DeadlineInput deadline,  DeadlineInput fundingDeadline,  String? department,  String? researchArea,  String? programmeUrl,  String? portalUrl,  String? portalUsername,  String? fundingUrl,  String? feeAmount,  String? feeCurrency,  FeeWaiver feeWaiver,  String? tuitionAmount,  String? tuitionCurrency,  ApproxDate? opensOn,  ApproxDate? decisionExpected,  String? notes,  List<RequirementSeed> requirements)  $default,) {final _that = this;
 switch (_that) {
 case _ApplicationDraft():
-return $default(_that.institutionId,_that.institutionName,_that.institutionCountry,_that.programmeName,_that.degree,_that.stage,_that.priority,_that.deadline,_that.fundingDeadline,_that.department,_that.researchArea,_that.programmeUrl,_that.portalUrl,_that.portalUsername,_that.fundingUrl,_that.feeAmount,_that.feeCurrency,_that.feeWaiver,_that.notes);case _:
+return $default(_that.institutionId,_that.institutionName,_that.institutionCountry,_that.programmeName,_that.degree,_that.stage,_that.priority,_that.deadline,_that.fundingDeadline,_that.department,_that.researchArea,_that.programmeUrl,_that.portalUrl,_that.portalUsername,_that.fundingUrl,_that.feeAmount,_that.feeCurrency,_that.feeWaiver,_that.tuitionAmount,_that.tuitionCurrency,_that.opensOn,_that.decisionExpected,_that.notes,_that.requirements);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -507,10 +519,10 @@ return $default(_that.institutionId,_that.institutionName,_that.institutionCount
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? institutionId,  String institutionName,  String? institutionCountry,  String programmeName,  DegreeType degree,  ApplicationStage stage,  int priority,  DeadlineInput deadline,  DeadlineInput fundingDeadline,  String? department,  String? researchArea,  String? programmeUrl,  String? portalUrl,  String? portalUsername,  String? fundingUrl,  String? feeAmount,  String? feeCurrency,  FeeWaiver feeWaiver,  String? notes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? institutionId,  String institutionName,  String? institutionCountry,  String programmeName,  DegreeType degree,  ApplicationStage stage,  int priority,  DeadlineInput deadline,  DeadlineInput fundingDeadline,  String? department,  String? researchArea,  String? programmeUrl,  String? portalUrl,  String? portalUsername,  String? fundingUrl,  String? feeAmount,  String? feeCurrency,  FeeWaiver feeWaiver,  String? tuitionAmount,  String? tuitionCurrency,  ApproxDate? opensOn,  ApproxDate? decisionExpected,  String? notes,  List<RequirementSeed> requirements)?  $default,) {final _that = this;
 switch (_that) {
 case _ApplicationDraft() when $default != null:
-return $default(_that.institutionId,_that.institutionName,_that.institutionCountry,_that.programmeName,_that.degree,_that.stage,_that.priority,_that.deadline,_that.fundingDeadline,_that.department,_that.researchArea,_that.programmeUrl,_that.portalUrl,_that.portalUsername,_that.fundingUrl,_that.feeAmount,_that.feeCurrency,_that.feeWaiver,_that.notes);case _:
+return $default(_that.institutionId,_that.institutionName,_that.institutionCountry,_that.programmeName,_that.degree,_that.stage,_that.priority,_that.deadline,_that.fundingDeadline,_that.department,_that.researchArea,_that.programmeUrl,_that.portalUrl,_that.portalUsername,_that.fundingUrl,_that.feeAmount,_that.feeCurrency,_that.feeWaiver,_that.tuitionAmount,_that.tuitionCurrency,_that.opensOn,_that.decisionExpected,_that.notes,_that.requirements);case _:
   return null;
 
 }
@@ -522,7 +534,7 @@ return $default(_that.institutionId,_that.institutionName,_that.institutionCount
 
 
 class _ApplicationDraft extends ApplicationDraft {
-  const _ApplicationDraft({this.institutionId, this.institutionName = '', this.institutionCountry, this.programmeName = '', this.degree = DegreeType.phd, this.stage = ApplicationStage.researching, this.priority = 2, this.deadline = const DeadlineInput(), this.fundingDeadline = const DeadlineInput(), this.department, this.researchArea, this.programmeUrl, this.portalUrl, this.portalUsername, this.fundingUrl, this.feeAmount, this.feeCurrency, this.feeWaiver = FeeWaiver.none, this.notes}): super._();
+  const _ApplicationDraft({this.institutionId, this.institutionName = '', this.institutionCountry, this.programmeName = '', this.degree = DegreeType.phd, this.stage = ApplicationStage.researching, this.priority = 2, this.deadline = const DeadlineInput(), this.fundingDeadline = const DeadlineInput(), this.department, this.researchArea, this.programmeUrl, this.portalUrl, this.portalUsername, this.fundingUrl, this.feeAmount, this.feeCurrency, this.feeWaiver = FeeWaiver.none, this.tuitionAmount, this.tuitionCurrency, this.opensOn, this.decisionExpected, this.notes,  List<RequirementSeed> requirements = const <RequirementSeed>[]}): _requirements = requirements,super._();
   
 
 /// Existing institution, or null to create one named [institutionName].
@@ -544,7 +556,22 @@ class _ApplicationDraft extends ApplicationDraft {
 @override final  String? feeAmount;
 @override final  String? feeCurrency;
 @override@JsonKey() final  FeeWaiver feeWaiver;
+@override final  String? tuitionAmount;
+@override final  String? tuitionCurrency;
+@override final  ApproxDate? opensOn;
+@override final  ApproxDate? decisionExpected;
 @override final  String? notes;
+/// Checklist to create along with the application. Only used on create
+/// (import); the form doesn't edit it.
+ final  List<RequirementSeed> _requirements;
+/// Checklist to create along with the application. Only used on create
+/// (import); the form doesn't edit it.
+@override@JsonKey() List<RequirementSeed> get requirements {
+  if (_requirements is EqualUnmodifiableListView) return _requirements;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_requirements);
+}
+
 
 /// Create a copy of ApplicationDraft
 /// with the given fields replaced by the non-null parameter values.
@@ -556,18 +583,18 @@ _$ApplicationDraftCopyWith<_ApplicationDraft> get copyWith => __$ApplicationDraf
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ApplicationDraft&&(identical(other.institutionId, institutionId) || other.institutionId == institutionId)&&(identical(other.institutionName, institutionName) || other.institutionName == institutionName)&&(identical(other.institutionCountry, institutionCountry) || other.institutionCountry == institutionCountry)&&(identical(other.programmeName, programmeName) || other.programmeName == programmeName)&&(identical(other.degree, degree) || other.degree == degree)&&(identical(other.stage, stage) || other.stage == stage)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.deadline, deadline) || other.deadline == deadline)&&(identical(other.fundingDeadline, fundingDeadline) || other.fundingDeadline == fundingDeadline)&&(identical(other.department, department) || other.department == department)&&(identical(other.researchArea, researchArea) || other.researchArea == researchArea)&&(identical(other.programmeUrl, programmeUrl) || other.programmeUrl == programmeUrl)&&(identical(other.portalUrl, portalUrl) || other.portalUrl == portalUrl)&&(identical(other.portalUsername, portalUsername) || other.portalUsername == portalUsername)&&(identical(other.fundingUrl, fundingUrl) || other.fundingUrl == fundingUrl)&&(identical(other.feeAmount, feeAmount) || other.feeAmount == feeAmount)&&(identical(other.feeCurrency, feeCurrency) || other.feeCurrency == feeCurrency)&&(identical(other.feeWaiver, feeWaiver) || other.feeWaiver == feeWaiver)&&(identical(other.notes, notes) || other.notes == notes));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ApplicationDraft&&(identical(other.institutionId, institutionId) || other.institutionId == institutionId)&&(identical(other.institutionName, institutionName) || other.institutionName == institutionName)&&(identical(other.institutionCountry, institutionCountry) || other.institutionCountry == institutionCountry)&&(identical(other.programmeName, programmeName) || other.programmeName == programmeName)&&(identical(other.degree, degree) || other.degree == degree)&&(identical(other.stage, stage) || other.stage == stage)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.deadline, deadline) || other.deadline == deadline)&&(identical(other.fundingDeadline, fundingDeadline) || other.fundingDeadline == fundingDeadline)&&(identical(other.department, department) || other.department == department)&&(identical(other.researchArea, researchArea) || other.researchArea == researchArea)&&(identical(other.programmeUrl, programmeUrl) || other.programmeUrl == programmeUrl)&&(identical(other.portalUrl, portalUrl) || other.portalUrl == portalUrl)&&(identical(other.portalUsername, portalUsername) || other.portalUsername == portalUsername)&&(identical(other.fundingUrl, fundingUrl) || other.fundingUrl == fundingUrl)&&(identical(other.feeAmount, feeAmount) || other.feeAmount == feeAmount)&&(identical(other.feeCurrency, feeCurrency) || other.feeCurrency == feeCurrency)&&(identical(other.feeWaiver, feeWaiver) || other.feeWaiver == feeWaiver)&&(identical(other.tuitionAmount, tuitionAmount) || other.tuitionAmount == tuitionAmount)&&(identical(other.tuitionCurrency, tuitionCurrency) || other.tuitionCurrency == tuitionCurrency)&&(identical(other.opensOn, opensOn) || other.opensOn == opensOn)&&(identical(other.decisionExpected, decisionExpected) || other.decisionExpected == decisionExpected)&&(identical(other.notes, notes) || other.notes == notes)&&const DeepCollectionEquality().equals(other.requirements, _requirements));
 }
 
 
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,institutionId,institutionName,institutionCountry,programmeName,degree,stage,priority,deadline,fundingDeadline,department,researchArea,programmeUrl,portalUrl,portalUsername,fundingUrl,feeAmount,feeCurrency,feeWaiver,notes]);
+    return Object.hashAll([runtimeType,institutionId,institutionName,institutionCountry,programmeName,degree,stage,priority,deadline,fundingDeadline,department,researchArea,programmeUrl,portalUrl,portalUsername,fundingUrl,feeAmount,feeCurrency,feeWaiver,tuitionAmount,tuitionCurrency,opensOn,decisionExpected,notes,const DeepCollectionEquality().hash(_requirements)]);
 }
 
 @override
 String toString() {
-    return 'ApplicationDraft(institutionId: $institutionId, institutionName: $institutionName, institutionCountry: $institutionCountry, programmeName: $programmeName, degree: $degree, stage: $stage, priority: $priority, deadline: $deadline, fundingDeadline: $fundingDeadline, department: $department, researchArea: $researchArea, programmeUrl: $programmeUrl, portalUrl: $portalUrl, portalUsername: $portalUsername, fundingUrl: $fundingUrl, feeAmount: $feeAmount, feeCurrency: $feeCurrency, feeWaiver: $feeWaiver, notes: $notes)';
+    return 'ApplicationDraft(institutionId: $institutionId, institutionName: $institutionName, institutionCountry: $institutionCountry, programmeName: $programmeName, degree: $degree, stage: $stage, priority: $priority, deadline: $deadline, fundingDeadline: $fundingDeadline, department: $department, researchArea: $researchArea, programmeUrl: $programmeUrl, portalUrl: $portalUrl, portalUsername: $portalUsername, fundingUrl: $fundingUrl, feeAmount: $feeAmount, feeCurrency: $feeCurrency, feeWaiver: $feeWaiver, tuitionAmount: $tuitionAmount, tuitionCurrency: $tuitionCurrency, opensOn: $opensOn, decisionExpected: $decisionExpected, notes: $notes, requirements: $requirements)';
 }
 
 
@@ -578,7 +605,7 @@ abstract mixin class _$ApplicationDraftCopyWith<$Res> implements $ApplicationDra
   factory _$ApplicationDraftCopyWith(_ApplicationDraft value, $Res Function(_ApplicationDraft) _then) = __$ApplicationDraftCopyWithImpl;
 @override @useResult
 $Res call({
- String? institutionId, String institutionName, String? institutionCountry, String programmeName, DegreeType degree, ApplicationStage stage, int priority, DeadlineInput deadline, DeadlineInput fundingDeadline, String? department, String? researchArea, String? programmeUrl, String? portalUrl, String? portalUsername, String? fundingUrl, String? feeAmount, String? feeCurrency, FeeWaiver feeWaiver, String? notes
+ String? institutionId, String institutionName, String? institutionCountry, String programmeName, DegreeType degree, ApplicationStage stage, int priority, DeadlineInput deadline, DeadlineInput fundingDeadline, String? department, String? researchArea, String? programmeUrl, String? portalUrl, String? portalUsername, String? fundingUrl, String? feeAmount, String? feeCurrency, FeeWaiver feeWaiver, String? tuitionAmount, String? tuitionCurrency, ApproxDate? opensOn, ApproxDate? decisionExpected, String? notes, List<RequirementSeed> requirements
 });
 
 
@@ -595,7 +622,7 @@ class __$ApplicationDraftCopyWithImpl<$Res>
 
 /// Create a copy of ApplicationDraft
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? institutionId = freezed,Object? institutionName = null,Object? institutionCountry = freezed,Object? programmeName = null,Object? degree = null,Object? stage = null,Object? priority = null,Object? deadline = null,Object? fundingDeadline = null,Object? department = freezed,Object? researchArea = freezed,Object? programmeUrl = freezed,Object? portalUrl = freezed,Object? portalUsername = freezed,Object? fundingUrl = freezed,Object? feeAmount = freezed,Object? feeCurrency = freezed,Object? feeWaiver = null,Object? notes = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? institutionId = freezed,Object? institutionName = null,Object? institutionCountry = freezed,Object? programmeName = null,Object? degree = null,Object? stage = null,Object? priority = null,Object? deadline = null,Object? fundingDeadline = null,Object? department = freezed,Object? researchArea = freezed,Object? programmeUrl = freezed,Object? portalUrl = freezed,Object? portalUsername = freezed,Object? fundingUrl = freezed,Object? feeAmount = freezed,Object? feeCurrency = freezed,Object? feeWaiver = null,Object? tuitionAmount = freezed,Object? tuitionCurrency = freezed,Object? opensOn = freezed,Object? decisionExpected = freezed,Object? notes = freezed,Object? requirements = null,}) {
   return _then(_ApplicationDraft(
 institutionId: freezed == institutionId ? _self.institutionId : institutionId // ignore: cast_nullable_to_non_nullable
 as String?,institutionName: null == institutionName ? _self.institutionName : institutionName // ignore: cast_nullable_to_non_nullable
@@ -615,8 +642,13 @@ as String?,fundingUrl: freezed == fundingUrl ? _self.fundingUrl : fundingUrl // 
 as String?,feeAmount: freezed == feeAmount ? _self.feeAmount : feeAmount // ignore: cast_nullable_to_non_nullable
 as String?,feeCurrency: freezed == feeCurrency ? _self.feeCurrency : feeCurrency // ignore: cast_nullable_to_non_nullable
 as String?,feeWaiver: null == feeWaiver ? _self.feeWaiver : feeWaiver // ignore: cast_nullable_to_non_nullable
-as FeeWaiver,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,
+as FeeWaiver,tuitionAmount: freezed == tuitionAmount ? _self.tuitionAmount : tuitionAmount // ignore: cast_nullable_to_non_nullable
+as String?,tuitionCurrency: freezed == tuitionCurrency ? _self.tuitionCurrency : tuitionCurrency // ignore: cast_nullable_to_non_nullable
+as String?,opensOn: freezed == opensOn ? _self.opensOn : opensOn // ignore: cast_nullable_to_non_nullable
+as ApproxDate?,decisionExpected: freezed == decisionExpected ? _self.decisionExpected : decisionExpected // ignore: cast_nullable_to_non_nullable
+as ApproxDate?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as String?,requirements: null == requirements ? _self._requirements : requirements // ignore: cast_nullable_to_non_nullable
+as List<RequirementSeed>,
   ));
 }
 

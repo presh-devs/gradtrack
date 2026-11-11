@@ -20,6 +20,9 @@ class SupabaseAttentionRepository implements AttentionRepository {
   final SupabaseClient _client;
 
   @override
+  Future<void> markHandled(AttentionItem item) async {}
+
+  @override
   Future<List<AttentionItem>> feed({Duration horizon = const Duration(days: 14)}) async {
     final rows = await _client.rpc<List<dynamic>>(
       'attention_feed',
@@ -46,6 +49,10 @@ class DemoAttentionRepository implements AttentionRepository {
   DemoAttentionRepository(this._store);
 
   final DemoStore _store;
+
+  @override
+  Future<void> markHandled(AttentionItem item) async =>
+      _store.attention.removeWhere((i) => i.type == item.type && i.itemId == item.itemId);
 
   @override
   Future<List<AttentionItem>> feed({Duration horizon = const Duration(days: 14)}) async {

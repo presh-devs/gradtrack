@@ -64,7 +64,9 @@ class DeadlineField extends StatelessWidget {
       label: label,
       text: value.date == null
           ? null
-          : DateFormat('EEE d MMM yyyy').format(value.date!),
+          : value.monthOnly
+              ? '${DateFormat('MMMM yyyy').format(value.date!)} (day not confirmed)'
+              : DateFormat('EEE d MMM yyyy').format(value.date!),
       placeholder: 'No date yet',
       icon: GtIcons.thisWeek,
       onTap: () => _pickDate(context),
@@ -78,7 +80,7 @@ class DeadlineField extends StatelessWidget {
       text:
           '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}',
       icon: GtIcons.clock,
-      onTap: value.date == null ? null : () => _pickTime(context),
+      onTap: value.date == null || value.monthOnly ? null : () => _pickTime(context),
     );
     final zone = TimezoneField(
       value: value.zone,
@@ -112,15 +114,94 @@ class DeadlineField extends StatelessWidget {
             ],
           ),
         ],
+        if (value.date != null)
+          _MonthOnlyToggle(
+            value: value.monthOnly,
+            onChanged: (on) => onUpdate((v) => v.copyWith(monthOnly: on)),
+          ),
         if (deadline != null) ...[
-          const SizedBox(height: GtSpace.sm),
+          const SizedBox(height: GtSpace.xs),
           Text(
-            deadline.differsFromLocal
-                ? '${deadline.zoneLabel} = ${deadline.localLabel} your time · ${DueText.relative(deadline.instant)}'
-                : '${deadline.zoneLabel} · ${DueText.relative(deadline.instant)}',
+            deadline.isMonthOnly
+                ? 'Reminders count down to ${DateFormat('d MMM').format(deadline.inZone)}, the earliest it could be · '
+                    '${deadline.dueLabel()}'
+                : deadline.differsFromLocal
+                    ? '${deadline.zoneLabel} = ${deadline.localLabel} your time · ${deadline.dueLabel()}'
+                    : '${deadline.zoneLabel} · ${deadline.dueLabel()}',
             style: t.bodySmall?.copyWith(color: gt.textSecondary),
           ),
         ],
+      ],
+    );
+  }
+}
+
+class _MonthOnlyToggle extends StatelessWidget {
+  const _MonthOnlyToggle({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return CheckboxListTile(
+      value: value,
+      onChanged: (v) => onChanged(v ?? false),
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      controlAffinity: ListTileControlAffinity.leading,
+      title: Text('Only the month is known', style: Theme.of(context).textTheme.bodyMedium),
+    );
+  }
+}
+
+/// A calendar date (no time or zone) that may be known only to the month:
+/// when the portal opens, when decisions are expected.
+class ApproxDateField extends StatelessWidget {
+  const ApproxDateField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.placeholder = 'Not known',
+  });
+
+  final String label;
+  final ApproxDate? value;
+  final ValueChanged<ApproxDate?> onChanged;
+  final String placeholder;
+
+  Future<void> _pick(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: value?.date ?? now,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 3),
+      helpText: label,
+    );
+    if (picked != null) onChanged(ApproxDate(picked, value?.precision ?? DatePrecision.day));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final v = value;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _PickerBox(
+          label: label,
+          text: v?.label,
+          placeholder: placeholder,
+          icon: GtIcons.thisWeek,
+          onTap: () => _pick(context),
+          onClear: v == null ? null : () => onChanged(null),
+        ),
+        if (v != null)
+          _MonthOnlyToggle(
+            value: v.isMonthOnly,
+            onChanged: (on) => onChanged(ApproxDate(v.date, on ? DatePrecision.month : DatePrecision.day)),
+          ),
       ],
     );
   }

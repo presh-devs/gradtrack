@@ -15,15 +15,18 @@ Future<void> main() async {
 
   if (Env.demoByAccident && kDebugMode) {
     debugPrint(
-      '⚠️  GradTrack is using DEMO data: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY were not provided.\n'
+      '⚠️  gradll is using DEMO data: SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY were not provided.\n'
       '    Run: flutter run -d chrome --dart-define-from-file=env.json --web-port 8080\n'
-      '    (or the "GradTrack (Supabase)" launch configuration in VS Code).',
+      '    (or the "gradll (Supabase)" launch configuration in VS Code).',
     );
   }
 
   if (!Env.demo) {
-    await Supabase.initialize(url: Env.supabaseUrl, publishableKey: Env.supabaseKey);
+    await Supabase.initialize(
+      url: Env.supabaseUrl,
+      publishableKey: Env.supabaseKey,
+    );
   }
 
-  runApp(const ProviderScope(child: GradTrackApp()));
+  runApp(const ProviderScope(child: GradllApp()));
 }
