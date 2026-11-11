@@ -34,11 +34,7 @@ Send from a subdomain such as `mail.yourdomain.com`, so gradll's email reputatio
 | Username | `resend` |
 | Password | your Resend API key |
 
-Then apply the higher sign-in rate limit from `supabase/config.toml` (30 emails an hour instead of 2):
-
-```bash
-supabase config push
-```
+Then raise the sign-in email limit: *Authentication → Rate Limits → emails sent per hour* → `30` (the default is 2). `supabase config push` doesn't manage this setting, so set it in the dashboard.
 
 The SMTP password is deliberately not in `config.toml`, so it never ends up in git.
 
@@ -55,7 +51,7 @@ Then **Settings → Send test digest** in the app.
 ## 5. Invite friends
 
 1. Turn on the invite-only hook and add their emails to `signup_allowlist` ([supabase.md §5](supabase.md#5-invite-only-sign-ups)).
-2. They need a URL to open, so deploy the app first and add its address to `additional_redirect_urls` in `supabase/config.toml`, then `supabase config push`.
+2. They need a URL to open, so deploy the app first ([deploy.md](deploy.md)).
 3. Each friend signs in with their invited email. Their data is private to them, and each gets their own digest at 07:00 in their own time zone (they can change it in Settings).
 
 ## Troubleshooting
@@ -63,6 +59,6 @@ Then **Settings → Send test digest** in the app.
 | Symptom | Likely cause |
 |---|---|
 | Friend gets no sign-in email | Custom SMTP not enabled, or the domain isn't verified in Resend yet. Check Resend → Emails for a bounce. |
-| "Email rate limit exceeded" | `supabase config push` hasn't been run since `email_sent` was raised. |
+| "Email rate limit exceeded" | The hourly limit in *Authentication → Rate Limits* is still the default 2. |
 | Test digest says "Email isn't set up yet" | `tool/setup_digest.sh` hasn't been run, or ran without `DIGEST_FROM`. |
 | Digest lands in spam | DNS records not all verified; send from the subdomain, not `resend.dev`. |

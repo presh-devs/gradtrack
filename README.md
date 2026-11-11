@@ -38,6 +38,12 @@ Database migrations live in `supabase/migrations/`:
 supabase db push
 ```
 
+Deploy to Cloudflare Pages ([docs/setup/deploy.md](docs/setup/deploy.md) has the one-time setup):
+
+```bash
+tool/deploy_web.sh
+```
+
 ## Develop
 
 ```bash

@@ -53,3 +53,6 @@ env*.json
 !env.example.json
 supabase/.temp/
 supabase/.branches/
+
+# Cloudflare wrangler local state
+.wrangler/

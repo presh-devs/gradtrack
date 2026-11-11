@@ -20,7 +20,7 @@ Exit: your real applications are in gradll with correct deadlines.
 - [ ] Requirements checklist with "Add common requirements" (US-05)
 - [ ] Recommenders + letter requests (US-07, S9)
 - [ ] Today screen on `attention_feed` with inline actions (S2). Feed and grouping are done; inline actions are still to do
-- [ ] Deploy web build to Cloudflare Pages / Netlify; start using it daily
+- [ ] Deploy web build to Cloudflare Pages (`tool/deploy_web.sh`, [deploy.md](../setup/deploy.md)); start using it daily
 
 Exit: Today is the first thing you open each morning.
 
