@@ -69,6 +69,7 @@ class DemoApplicationsRepository implements ApplicationsRepository {
 
   static Application _apply(ApplicationDraft d, Institution inst, Application base) {
     final fee = d.parsedFee;
+    final tuition = d.parsedTuition;
     return base.copyWith(
       institutionId: inst.id,
       institutionName: inst.name,
@@ -89,6 +90,10 @@ class DemoApplicationsRepository implements ApplicationsRepository {
       feeAmount: fee,
       feeCurrency: fee == null ? null : d.feeCurrency?.trim().toUpperCase(),
       feeWaiver: d.feeWaiver,
+      tuitionAmount: tuition,
+      tuitionCurrency: tuition == null ? null : d.tuitionCurrency?.trim().toUpperCase(),
+      opensOn: d.opensOn,
+      decisionExpected: d.decisionExpected,
       notes: blankToNull(d.notes),
     );
   }

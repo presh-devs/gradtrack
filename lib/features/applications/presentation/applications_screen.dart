@@ -6,7 +6,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/theme/icons.dart';
 import '../../../app/router.dart';
 import '../../../core/theme/tokens.dart';
-import '../../../core/time/deadline.dart';
 import '../../../core/widgets/async_value_view.dart';
 import '../../../core/widgets/gt_widgets.dart';
 import '../domain/application.dart';
@@ -340,7 +339,7 @@ class _DeadlineCell extends StatelessWidget {
         Text(d.zoneLabel, style: t.labelLarge),
         const SizedBox(height: 2),
         relevant
-            ? ToneChip(label: DueText.relative(d.instant), tone: d.instant.dueTone(context.gt))
+            ? ToneChip(label: d.dueLabel(), tone: d.instant.dueTone(context.gt))
             : Text(d.differsFromLocal ? '${d.localLabel} your time' : 'Passed', style: t.bodySmall),
       ],
     );

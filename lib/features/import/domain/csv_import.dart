@@ -1,13 +1,17 @@
 import 'package:csv/csv.dart';
 
+import '../../../core/time/deadline.dart';
 import '../../applications/domain/application.dart';
 import '../../applications/domain/application_draft.dart';
 import '../../applications/domain/institution.dart';
 import 'value_parsers.dart';
 
-/// Columns GradTrack understands (spec 02 · CSV import mapping).
+/// Columns gradll understands (spec 02 · CSV import mapping).
 enum ImportField {
-  university('University', required: true, aliases: ['university', 'school', 'institution', 'uni', 'college']),
+  university('University', required: true, aliases: [
+    'university', 'school', 'institution', 'uni', 'college', 'nameofschool', 'schoolname', 'universityname',
+    'nameofuniversity', 'nameofinstitution',
+  ]),
   programme('Programme', required: true, aliases: [
     'programme', 'program', 'programmename', 'programname', 'course', 'degreeprogram', 'degreeprogramme',
   ]),
@@ -24,12 +28,25 @@ enum ImportField {
   fundingDeadline('Funding deadline', aliases: [
     'fundingdeadline', 'scholarshipdeadline', 'funding', 'fundingdate', 'scholarship',
   ]),
-  fee('Application fee', aliases: ['fee', 'applicationfee', 'appfee', 'cost', 'fees']),
+  opensOn('Applications open', aliases: [
+    'applicationopen', 'applicationsopen', 'applicationopens', 'opens', 'opendate', 'opening', 'openingdate',
+    'portalopens', 'opensOn',
+  ]),
+  decisionExpected('Expected decision', aliases: [
+    'expecteddateofdecision', 'expecteddecision', 'expecteddecisiondate', 'decisiondate', 'decisionexpected',
+    'resultdate', 'decision',
+  ]),
+  fee('Application fee', aliases: ['fee', 'applicationfee', 'appfee', 'cost']),
   feeCurrency('Fee currency', aliases: ['feecurrency', 'currency']),
+  tuition('Tuition', aliases: ['tuition', 'tuitionfee', 'tuitionfees', 'fees', 'tuitionestimate', 'schoolfees']),
   programmeUrl('Programme page', aliases: ['programmeurl', 'programurl', 'url', 'website', 'link', 'programmepage', 'webpage']),
   portalUrl('Application portal', aliases: ['portalurl', 'portal', 'applicationportal', 'applicationlink', 'applylink', 'applyurl']),
+  portalUsername('Portal username', aliases: ['username', 'portalusername', 'login', 'loginid', 'userid', 'user', 'portallogin']),
   stage('Stage', aliases: ['stage', 'status', 'progress']),
   priority('Priority', aliases: ['priority', 'rank', 'tier', 'ranking']),
+  requirements('Requirements (comma-separated)', aliases: [
+    'requirements', 'documents', 'documentsrequired', 'requireddocuments', 'checklist', 'documentsneeded',
+  ]),
   notes('Notes', aliases: ['notes', 'note', 'comments', 'comment', 'remarks']);
 
   const ImportField(this.label, {this.required = false, this.aliases = const []});
@@ -84,10 +101,12 @@ class CsvTable {
 typedef ColumnMapping = Map<int, ImportField>;
 
 /// Matches headers to fields by alias; each field is used at most once.
+/// Password columns are never mapped (see [isSecretHeader]).
 ColumnMapping autoMap(List<String> headers) {
   final mapping = <int, ImportField>{};
   final used = <ImportField>{};
   for (var i = 0; i < headers.length; i++) {
+    if (isSecretHeader(headers[i])) continue;
     final k = _key(headers[i]);
     for (final f in ImportField.values) {
       if (!used.contains(f) && f.aliases.contains(k)) {
@@ -103,13 +122,15 @@ ColumnMapping autoMap(List<String> headers) {
 /// Spreadsheet headers for the downloadable template, plus one example row.
 const templateHeaders = [
   'University', 'Country', 'Programme', 'Degree', 'Department', 'Research area',
-  'Deadline', 'Deadline time zone', 'Funding deadline', 'Application fee', 'Fee currency',
-  'Programme page', 'Application portal', 'Stage', 'Priority', 'Notes',
+  'Deadline', 'Deadline time zone', 'Funding deadline', 'Applications open', 'Expected decision',
+  'Application fee', 'Fee currency', 'Tuition', 'Programme page', 'Application portal', 'Portal username',
+  'Stage', 'Priority', 'Requirements', 'Notes',
 ];
 const templateExample = [
   'University of Toronto', 'CA', 'Computer Science', 'PhD', 'Computer Science', 'Machine learning',
-  '2026-12-01 23:59', 'America/Toronto', '2026-11-15', '125', 'CAD',
-  'https://web.cs.toronto.edu/graduate', 'https://sgs.utoronto.ca', 'Shortlisted', 'Top', '',
+  '2026-12-01 23:59', 'America/Toronto', '2026-11-15', 'Oct 2026', 'Mar 2027',
+  '125', 'CAD', 'CAD 7k5', 'https://web.cs.toronto.edu/graduate', 'https://sgs.utoronto.ca', 'jdoe',
+  'Shortlisted', 'Top', 'Transcript, CV, SOP, IELTS', '',
 ];
 
 String buildTemplateCsv() => Csv(autoDetect: false).encode([templateHeaders, templateExample]);
@@ -178,10 +199,21 @@ List<ImportRow> buildImportRows(
       warnings.add('Country "$countryRaw" not recognised, so it was left blank');
     }
 
-    final (degree, degreeOk) = parseDegree(cell(ImportField.degree));
-    if (!degreeOk) warnings.add('Degree "${cell(ImportField.degree)}" saved as Other');
-    final (stage, stageOk) = parseStage(cell(ImportField.stage));
-    if (!stageOk) warnings.add('Stage "${cell(ImportField.stage)}" not recognised, so it was set to Researching');
+    final degreeRaw = cell(ImportField.degree);
+    var (degree, degreeOk) = parseDegree(degreeRaw);
+    if (!degreeOk) warnings.add('Degree "$degreeRaw" saved as Other');
+    if (degreeRaw.isEmpty) {
+      // No degree column: "Master of Finance", "International MBA" say it.
+      final inferred = degreeFromProgramme(cell(ImportField.programme));
+      if (inferred != null) degree = inferred;
+    }
+    // Text that couldn't go in a field is kept in notes rather than lost.
+    final extraNotes = <String>[];
+
+    final stageRaw = cell(ImportField.stage);
+    final (stage, stageOk) = parseStage(stageRaw);
+    if (!stageOk) warnings.add('Stage "$stageRaw" not recognised, so it was set to Researching');
+    if (!isPlainStage(stageRaw)) extraNotes.add('Status: $stageRaw');
     if (stage == ApplicationStage.decided && stageOk) {
       warnings.add('Marked as Decided. Set the outcome on the application');
     }
@@ -195,12 +227,31 @@ List<ImportRow> buildImportRows(
     if (zoneRaw.isNotEmpty && zoneColumn == null) {
       warnings.add('Time zone "$zoneRaw" not recognised');
     }
+    // An unreadable date doesn't block the row: it's kept in notes so it can
+    // be set by hand after import.
+    ParsedWhen? readWhen(ImportField f, String label) {
+      final raw = cell(f);
+      if (raw.isEmpty) return null;
+      final parsed = parseWhen(raw, order: options.dateOrder);
+      if (parsed == null) {
+        warnings.add('$label "$raw" isn\'t a date I can read, so it was kept in notes');
+        extraNotes.add('$label: $raw');
+      } else if (parsed.isMonthOnly && (f == ImportField.deadline || f == ImportField.fundingDeadline)) {
+        warnings.add('$label has no day: saved as ${_monthLabel(parsed.date)}, date not confirmed');
+      }
+      return parsed;
+    }
+
     final deadlineRaw = cell(ImportField.deadline);
-    final deadline = parseDateTime(deadlineRaw, order: options.dateOrder);
-    if (deadlineRaw.isNotEmpty && deadline == null) errors.add('Deadline "$deadlineRaw" isn\'t a date I can read');
+    final deadlineWhen = readWhen(ImportField.deadline, 'Deadline');
     final fundingRaw = cell(ImportField.fundingDeadline);
-    final funding = parseDateTime(fundingRaw, order: options.dateOrder);
-    if (fundingRaw.isNotEmpty && funding == null) errors.add('Funding deadline "$fundingRaw" isn\'t a date I can read');
+    final fundingWhen = readWhen(ImportField.fundingDeadline, 'Funding deadline');
+    final opensWhen = readWhen(ImportField.opensOn, 'Applications open');
+    final decisionWhen = readWhen(ImportField.decisionExpected, 'Expected decision');
+    final deadline = deadlineWhen?.exact;
+    if (deadlineWhen?.rangeStart != null) {
+      warnings.add('Deadline is a range: saved the closing date');
+    }
     if (isAmbiguousNumericDate(deadlineRaw) || isAmbiguousNumericDate(fundingRaw)) {
       warnings.add('Read as ${options.dateOrder == DateOrder.dayFirst ? 'day/month' : 'month/day'}. Check the date');
     }
@@ -219,26 +270,71 @@ List<ImportRow> buildImportRows(
       (zone, zoneSource) = (options.defaultZone, 'default');
     }
 
-    DeadlineInput toInput(ParsedDateTime? p) => p == null
-        ? DeadlineInput(zone: zone)
-        : DeadlineInput(
-            date: p.date,
-            hour: p.hour ?? 23,
-            minute: p.minute ?? 59,
-            zone: p.zoneHint ?? zone,
-          );
-
-    // Fee
-    final fee = parseFee(cell(ImportField.fee));
-    var feeCurrency = cell(ImportField.feeCurrency).isNotEmpty
-        ? cell(ImportField.feeCurrency).toUpperCase()
-        : fee.currency;
-    var feeAmount = fee.amount;
-    if (feeAmount != null && (feeCurrency == null || !RegExp(r'^[A-Z]{3}$').hasMatch(feeCurrency))) {
-      warnings.add('Fee skipped: no currency (add a Fee currency column, e.g. CAD)');
-      feeAmount = null;
-      feeCurrency = null;
+    DeadlineInput toInput(ParsedWhen? w) {
+      final p = w?.exact;
+      if (w == null) return DeadlineInput(zone: zone);
+      if (p == null) return DeadlineInput(date: w.month, zone: zone, monthOnly: true);
+      return DeadlineInput(
+        date: p.date,
+        hour: p.hour ?? 23,
+        minute: p.minute ?? 59,
+        zone: p.zoneHint ?? zone,
+      );
     }
+
+    ApproxDate? toApprox(ParsedWhen? w) {
+      if (w == null) return null;
+      // For an opening window "16 Dec - 22 Jan", the portal opens at the start.
+      final v = identical(w, opensWhen) && w.rangeStart != null ? w.rangeStart! : w;
+      return ApproxDate(v.date, v.isMonthOnly ? DatePrecision.month : DatePrecision.day);
+    }
+
+    // A deadline range's start is when applications open, if not given.
+    final opensOn = toApprox(opensWhen) ??
+        (deadlineWhen?.rangeStart == null
+            ? null
+            : ApproxDate(
+                deadlineWhen!.rangeStart!.date,
+                deadlineWhen.rangeStart!.isMonthOnly ? DatePrecision.month : DatePrecision.day,
+              ));
+
+    // Money: currency from the cell, a currency column, or the country.
+    ({String? amount, String? currency}) money(ImportField f, String label, {String? currencyColumn}) {
+      final raw = cell(f);
+      if (raw.isEmpty) return (amount: null, currency: null);
+      final parsed = parseFee(raw);
+      if (parsed.amount == null) {
+        warnings.add('$label "$raw" isn\'t an amount, so it was kept in notes');
+        extraNotes.add('$label: $raw');
+        return (amount: null, currency: null);
+      }
+      var currency = currencyColumn?.isNotEmpty == true ? currencyColumn!.toUpperCase() : parsed.currency;
+      if (currency == null && raw.contains(RegExp(r'[$﹩＄]')) && country != null && !_dollarCountries.contains(country)) {
+        currency = 'USD';
+      }
+      if (currency == null && countryCurrencies[country] != null) {
+        currency = countryCurrencies[country];
+        warnings.add('$label "$raw" has no currency: assumed $currency from the country');
+      }
+      if (currency == null || !RegExp(r'^[A-Z]{3}$').hasMatch(currency)) {
+        warnings.add('$label skipped: no currency (add a Fee currency column, e.g. CAD)');
+        extraNotes.add('$label: $raw');
+        return (amount: null, currency: null);
+      }
+      return (amount: parsed.amount, currency: currency);
+    }
+
+    final feeRaw = cell(ImportField.fee);
+    final mentionsWaiver = feeRaw.toLowerCase().contains('waiver');
+    final fee = money(ImportField.fee, 'Application fee', currencyColumn: cell(ImportField.feeCurrency));
+    final tuition = money(ImportField.tuition, 'Tuition');
+
+    final requirements = parseRequirements(cell(ImportField.requirements));
+
+    final notes = [
+      if (cell(ImportField.notes).isNotEmpty) cell(ImportField.notes),
+      ...extraNotes,
+    ].join('\n');
 
     final draft = ApplicationDraft(
       institutionId: known?.id,
@@ -248,15 +344,22 @@ List<ImportRow> buildImportRows(
       degree: degree,
       stage: stage,
       priority: priority,
-      deadline: toInput(deadline),
-      fundingDeadline: toInput(funding),
+      deadline: toInput(deadlineWhen),
+      fundingDeadline: toInput(fundingWhen),
+      opensOn: opensOn,
+      decisionExpected: toApprox(decisionWhen),
       department: _blank(cell(ImportField.department)),
       researchArea: _blank(cell(ImportField.researchArea)),
       programmeUrl: normaliseUrl(cell(ImportField.programmeUrl)),
       portalUrl: normaliseUrl(cell(ImportField.portalUrl)),
-      feeAmount: feeAmount,
-      feeCurrency: feeCurrency,
-      notes: _blank(cell(ImportField.notes)),
+      portalUsername: _blank(cell(ImportField.portalUsername)),
+      feeAmount: fee.amount,
+      feeCurrency: fee.currency,
+      feeWaiver: mentionsWaiver ? FeeWaiver.eligible : FeeWaiver.none,
+      tuitionAmount: tuition.amount,
+      tuitionCurrency: tuition.currency,
+      requirements: requirements,
+      notes: _blank(notes),
     );
     errors.addAll(draft.validate().values);
 
@@ -274,10 +377,16 @@ List<ImportRow> buildImportRows(
       draft: draft,
       errors: errors,
       warnings: warnings,
-      zoneSource: deadline == null ? null : zoneSource,
+      zoneSource: deadline == null && deadlineWhen == null ? null : zoneSource,
     ));
   }
   return result;
 }
 
 String? _blank(String s) => s.isEmpty ? null : s;
+
+String _monthLabel(DateTime d) =>
+    '${const ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.month - 1]} ${d.year}';
+
+/// Where a bare "$" means the local dollar, not USD.
+const _dollarCountries = {'US', 'CA', 'AU', 'NZ', 'SG', 'HK'};

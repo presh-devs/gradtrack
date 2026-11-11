@@ -3,16 +3,32 @@ import 'dart:async';
 import '../../features/applications/domain/application.dart';
 import '../../features/applications/domain/institution.dart';
 import '../../features/attention/domain/attention_item.dart';
+import '../../features/checklist/domain/requirement.dart';
+import '../../features/letters/domain/letters.dart';
+import '../../features/people/domain/professor.dart';
+import '../../features/settings/domain/profile.dart';
 import '../time/deadline.dart';
 
 /// In-memory data for demo mode (no Supabase configured). Dates are generated
 /// relative to "now" so the Today screen always has something realistic.
 class DemoStore {
-  DemoStore._(this.applications, this.institutions, this.attention);
+  DemoStore._(this.applications, this.institutions, this.attention, this.professors, this.recommenders);
 
   final List<Application> applications;
   final List<Institution> institutions;
   final List<AttentionItem> attention;
+  final List<Professor> professors;
+  final List<Recommender> recommenders;
+
+  Profile profile = const Profile(displayName: 'Demo', email: 'demo@example.test', neverEdited: true);
+
+  /// Letter requests by application id, created on first view
+  /// (see DemoLettersRepository).
+  final Map<String, List<LetterRequest>> letters = {};
+
+  /// Checklists by application id, created on first view
+  /// (see DemoRequirementsRepository).
+  final Map<String, List<Requirement>> requirements = {};
 
   int _seq = 100;
   int nextId() => ++_seq;
@@ -217,7 +233,69 @@ class DemoStore {
       for (final a in apps)
         Institution(id: a.institutionId, name: a.institutionName, country: a.country, defaultTz: a.deadline?.zone),
     ];
-    return DemoStore._(apps, institutions, feed);
+    final professors = <Professor>[
+      Professor(
+        id: 'p1',
+        institutionId: 'i3',
+        institutionName: 'University of Edinburgh',
+        name: 'Amara Okafor',
+        academicTitle: 'Prof.',
+        email: 'a.okafor@example.ac.uk',
+        researchInterests: 'Low-resource NLP, multilingual models',
+        state: OutreachState.awaitingReply,
+        lastSentAt: n.subtract(const Duration(days: 8)),
+        followUpAt: n.subtract(const Duration(hours: 2)),
+        applicationIds: const ['a3'],
+      ),
+      Professor(
+        id: 'p2',
+        institutionId: 'i1',
+        institutionName: 'University of Toronto',
+        name: 'Daniel Reyes',
+        academicTitle: 'Dr.',
+        email: 'd.reyes@example.edu',
+        researchInterests: 'ML systems, compilers for accelerators',
+        stance: ProfessorStance.interested,
+        state: OutreachState.replied,
+        lastSentAt: n.subtract(const Duration(days: 20)),
+        lastReplyAt: n.subtract(const Duration(days: 15)),
+        applicationIds: const ['a1'],
+      ),
+      Professor(
+        id: 'p3',
+        institutionId: 'i1',
+        institutionName: 'University of Toronto',
+        name: 'Mei Lin',
+        academicTitle: 'Prof.',
+        researchInterests: 'Distributed training',
+      ),
+    ];
+    const recommenders = <Recommender>[
+      Recommender(
+        id: 'rc1',
+        name: 'Tunde Bello',
+        academicTitle: 'Dr.',
+        email: 't.bello@example.edu.ng',
+        institution: 'University of Lagos',
+        relationship: 'Final-year project supervisor',
+      ),
+      Recommender(
+        id: 'rc2',
+        name: 'Ada Nwosu',
+        academicTitle: 'Prof.',
+        email: 'a.nwosu@example.edu.ng',
+        institution: 'University of Lagos',
+        relationship: 'Head of department',
+      ),
+      Recommender(
+        id: 'rc3',
+        name: 'Grace Kim',
+        email: 'grace.kim@example.com',
+        institution: 'Acme Analytics',
+        relationship: 'Internship manager',
+      ),
+    ];
+    return DemoStore._(apps, institutions, feed, professors, [...recommenders]);
   }
 
   static String _month(DateTime d) =>

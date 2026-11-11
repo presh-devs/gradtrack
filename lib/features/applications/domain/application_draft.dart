@@ -16,6 +16,9 @@ abstract class DeadlineInput with _$DeadlineInput {
     @Default(23) int hour,
     @Default(59) int minute,
     String? zone,
+
+    /// Only the month is known; day and time are ignored.
+    @Default(false) bool monthOnly,
   }) = _DeadlineInput;
 
   factory DeadlineInput.fromDeadline(Deadline? d, {String? fallbackZone}) {
@@ -26,14 +29,41 @@ abstract class DeadlineInput with _$DeadlineInput {
       hour: t.hour,
       minute: t.minute,
       zone: d.zone,
+      monthOnly: d.isMonthOnly,
     );
   }
 
   bool get isSet => date != null;
 
-  Deadline? toDeadline() => date == null || zone == null
-      ? null
-      : Deadline.wallClock(zone!, date!.year, date!.month, date!.day, hour: hour, minute: minute);
+  Deadline? toDeadline() {
+    if (date == null || zone == null) return null;
+    if (monthOnly) return Deadline.month(zone!, date!.year, date!.month);
+    return Deadline.wallClock(zone!, date!.year, date!.month, date!.day, hour: hour, minute: minute);
+  }
+}
+
+/// A checklist item to create with a new application (from import).
+class RequirementSeed {
+  const RequirementSeed(this.kind, this.title, {this.external = false});
+
+  /// `requirements.kind` value, e.g. `transcript`.
+  final String kind;
+  final String title;
+
+  /// Depends on someone else (registrar, test agency, embassy).
+  final bool external;
+
+  Map<String, dynamic> toJson() => {'kind': kind, 'title': title, 'depends_on': external ? 'external' : 'self'};
+
+  @override
+  bool operator ==(Object other) =>
+      other is RequirementSeed && other.kind == kind && other.title == title && other.external == external;
+
+  @override
+  int get hashCode => Object.hash(kind, title, external);
+
+  @override
+  String toString() => 'RequirementSeed($kind, $title)';
 }
 
 enum DraftField {
@@ -46,6 +76,8 @@ enum DraftField {
   fundingUrl,
   fee,
   feeCurrency,
+  tuition,
+  tuitionCurrency,
 }
 
 /// Everything the application form edits. Pure Dart: validation and
@@ -74,7 +106,15 @@ abstract class ApplicationDraft with _$ApplicationDraft {
     String? feeAmount, // as typed; parsed on validate/save
     String? feeCurrency,
     @Default(FeeWaiver.none) FeeWaiver feeWaiver,
+    String? tuitionAmount, // as typed; parsed on validate/save
+    String? tuitionCurrency,
+    ApproxDate? opensOn,
+    ApproxDate? decisionExpected,
     String? notes,
+
+    /// Checklist to create along with the application. Only used on create
+    /// (import); the form doesn't edit it.
+    @Default(<RequirementSeed>[]) List<RequirementSeed> requirements,
   }) = _ApplicationDraft;
 
   /// [fallbackZone] prefills the zone of deadlines that aren't set yet.
@@ -100,13 +140,21 @@ abstract class ApplicationDraft with _$ApplicationDraft {
         feeAmount: a.feeAmount == null ? null : _formatAmount(a.feeAmount!),
         feeCurrency: a.feeCurrency,
         feeWaiver: a.feeWaiver,
+        tuitionAmount: a.tuitionAmount == null ? null : _formatAmount(a.tuitionAmount!),
+        tuitionCurrency: a.tuitionCurrency,
+        opensOn: a.opensOn,
+        decisionExpected: a.decisionExpected,
         notes: a.notes,
       );
 
   bool get createsInstitution => institutionId == null;
 
-  double? get parsedFee {
-    final raw = feeAmount?.replaceAll(',', '').trim();
+  double? get parsedFee => _parseAmount(feeAmount);
+
+  double? get parsedTuition => _parseAmount(tuitionAmount);
+
+  static double? _parseAmount(String? v) {
+    final raw = v?.replaceAll(',', '').trim();
     return raw == null || raw.isEmpty ? null : double.tryParse(raw);
   }
 
@@ -128,13 +176,14 @@ abstract class ApplicationDraft with _$ApplicationDraft {
     ]) {
       if (!_isBlankOrUrl(value)) errors[field] = 'Enter a full link starting with https://';
     }
-    final rawFee = feeAmount?.trim() ?? '';
-    if (rawFee.isNotEmpty) {
-      final fee = parsedFee;
-      if (fee == null || fee < 0) errors[DraftField.fee] = 'Enter an amount, e.g. 125 or 125.50';
-      final cur = feeCurrency?.trim() ?? '';
-      if (!RegExp(r'^[A-Za-z]{3}$').hasMatch(cur)) {
-        errors[DraftField.feeCurrency] = '3-letter code, e.g. CAD';
+    for (final (raw, parsed, currency, field, currencyField) in [
+      (feeAmount, parsedFee, feeCurrency, DraftField.fee, DraftField.feeCurrency),
+      (tuitionAmount, parsedTuition, tuitionCurrency, DraftField.tuition, DraftField.tuitionCurrency),
+    ]) {
+      if ((raw?.trim() ?? '').isEmpty) continue;
+      if (parsed == null || parsed < 0) errors[field] = 'Enter an amount, e.g. 125 or 125.50';
+      if (!RegExp(r'^[A-Za-z]{3}$').hasMatch(currency?.trim() ?? '')) {
+        errors[currencyField] = '3-letter code, e.g. CAD';
       }
     }
     return errors;

@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gradtrack/core/theme/app_theme.dart';
-import 'package:gradtrack/features/auth/data/auth_repositories.dart';
-import 'package:gradtrack/features/auth/domain/auth_repository.dart';
-import 'package:gradtrack/features/auth/presentation/offline_banner.dart';
+import 'package:gradll/core/theme/app_theme.dart';
+import 'package:gradll/features/auth/data/auth_repositories.dart';
+import 'package:gradll/features/auth/domain/auth_repository.dart';
+import 'package:gradll/features/auth/presentation/offline_banner.dart';
 
 class _FakeAuth implements AuthRepository {
   final reachable = StreamController<bool>.broadcast();

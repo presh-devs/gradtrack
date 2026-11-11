@@ -1,8 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gradtrack/features/applications/domain/application.dart';
-import 'package:gradtrack/features/applications/domain/institution.dart';
-import 'package:gradtrack/features/import/domain/csv_import.dart';
-import 'package:gradtrack/features/import/domain/value_parsers.dart';
+import 'package:gradll/core/time/deadline.dart';
+import 'package:gradll/features/applications/domain/application.dart';
+import 'package:gradll/features/applications/domain/institution.dart';
+import 'package:gradll/features/import/domain/csv_import.dart';
+import 'package:gradll/features/import/domain/value_parsers.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 void main() {
@@ -159,15 +160,166 @@ Waterloo,CS,MBA,,\$90,Whatever''',
       );
       expect(r.map((e) => e.status), [
         RowStatus.invalid, // no university
-        RowStatus.invalid, // bad date
-        RowStatus.duplicate, // already in GradTrack
+        RowStatus.ready, // unreadable date: kept in notes, not blocking
+        RowStatus.duplicate, // already in gradll
         RowStatus.ready,
         RowStatus.duplicate, // same as the row above
         RowStatus.ready,
       ]);
       expect(r.map((e) => e.line), [2, 3, 4, 5, 6, 7]);
+      expect(r[1].draft!.notes, 'Deadline: not a date');
+      expect(r[1].draft!.deadline.isSet, isFalse);
       expect(r.last.warnings, hasLength(3)); // degree, stage, fee without currency
       expect(r.last.draft!.feeAmount, isNull);
+    });
+  });
+
+  group('spreadsheet formats', () {
+    const options = ImportOptions(defaultZone: 'Africa/Lagos');
+
+    test('month-only dates, ranges and month-year parsing', () {
+      expect(parseMonthYear('Dec-26'), DateTime(2026, 12));
+      expect(parseMonthYear('October 2026'), DateTime(2026, 10));
+      expect(parseMonthYear('2027-01'), DateTime(2027, 1));
+      expect(parseMonthYear('03/2027'), DateTime(2027, 3));
+      expect(parseMonthYear('Dec 1'), isNull);
+      final range = parseWhen('16 December 2026 - 22 January 2027')!;
+      expect(range.date, DateTime(2027, 1, 22));
+      expect(range.rangeStart!.date, DateTime(2026, 12, 16));
+      expect(parseWhen('Oct-26')!.isMonthOnly, isTrue);
+    });
+
+    test('fees in words, k-notation, and text that is not an amount', () {
+      expect(parseFee('35 euros'), (amount: '35', currency: 'EUR'));
+      expect(parseFee('€ 90'), (amount: '90', currency: 'EUR'));
+      expect(parseFee('7k5 euros tuition'), (amount: '7500', currency: 'EUR'));
+      expect(parseFee('800'), (amount: '800', currency: null));
+      expect(parseFee('RMB 800'), (amount: '800', currency: 'CNY'));
+      expect(parseFee('fee waiver code is: ABC2025'), (amount: null, currency: null));
+      expect(parseFee('Opens Jan 16'), (amount: null, currency: null));
+    });
+
+    test('degree from the programme title', () {
+      expect(degreeFromProgramme('Master of Finance'), DegreeType.msc);
+      expect(degreeFromProgramme('Master of science in financial technology'), DegreeType.msc);
+      expect(degreeFromProgramme('International MBA'), DegreeType.other);
+      expect(degreeFromProgramme('PhD in Chemistry'), DegreeType.phd);
+      expect(degreeFromProgramme('Finance'), isNull);
+    });
+
+    test('free-text statuses, regions and cities', () {
+      expect(parseStage('applied, so check'), (ApplicationStage.submitted, true));
+      expect(parseStage('APPLIED'), (ApplicationStage.submitted, true));
+      expect(isPlainStage('APPLIED'), isTrue);
+      expect(isPlainStage('applied. Wait for responses'), isFalse);
+      expect(parseCountry('Chinese'), 'CN');
+      expect(parseCountry('American'), 'US');
+      expect(parseCountry('Beijing'), 'CN');
+      expect(parseCountry('Europe'), isNull);
+    });
+
+    test('requirement lists become checklist items', () {
+      final r = parseRequirements(
+        'Bsc, int passport, official academic transcript, cv, personal stat/study plan, two recomm, english prof, degree auth',
+      );
+      expect(r.map((e) => e.title), [
+        'BSc certificate',
+        'International passport',
+        'Official academic transcript',
+        'CV',
+        'Personal statement/study plan',
+        'Two recommendation letters',
+        'English proficiency',
+        'Degree authentication',
+      ]);
+      expect(r.map((e) => e.kind), [
+        'certificate',
+        'other',
+        'transcript',
+        'cv',
+        'research_statement',
+        'other',
+        'english_test',
+        'certificate',
+      ]);
+      expect(r.where((e) => e.external).map((e) => e.kind), ['transcript', 'english_test', 'certificate']);
+    });
+
+    test('maps an application sheet and never maps passwords', () {
+      final headers = [
+        'S/N', 'NAME OF SCHOOL', 'PROGRAM', 'WEBSITE', 'LOCATION', 'FEES(﹩)', 'FUNDING', 'APPLICATION FEE',
+        'APPLICATION OPEN', 'DEADLINE', 'NOTES', 'APPLICATION LINK', 'Username', 'PASSWORD', 'STATUS',
+        'EXPECTED DATE OF DECISION',
+      ];
+      final m = autoMap(headers);
+      expect(m[1], ImportField.university);
+      expect(m[2], ImportField.programme);
+      expect(m[3], ImportField.programmeUrl);
+      expect(m[4], ImportField.country);
+      expect(m[5], ImportField.tuition);
+      expect(m[6], ImportField.fundingDeadline); // user can unmap; it's an alias
+      expect(m[7], ImportField.fee);
+      expect(m[8], ImportField.opensOn);
+      expect(m[9], ImportField.deadline);
+      expect(m[10], ImportField.notes);
+      expect(m[11], ImportField.portalUrl);
+      expect(m[12], ImportField.portalUsername);
+      expect(m.containsKey(13), isFalse);
+      expect(m[14], ImportField.stage);
+      expect(m[15], ImportField.decisionExpected);
+      expect(isSecretHeader('PASSWORD'), isTrue);
+    });
+
+    test('imports sheet-style rows without losing information', () {
+      const csv = 'School\tProgram\tLocation\tApplication fee\tApplication open\tDeadline\tRequirements\tUsername\tStatus\n'
+          'Peking university\tGlobal master in management\tBeijing\t800\tOct-26\tDec-26\tBsc, cv, two recomm\t\t\n'
+          'Northeastern University\tChemical Engineering\tAmerican\tfee waiver code is: ABC2025\t\t\t\tjdoe\tApplied\n'
+          'LUT\tEnergy\tfinland\t\t\t16 December 2026 - 22 January 2027\t\t\tapplied, so check\n'
+          'UNB\tChemistry\tCanada\t\$75\t\tMarch 31st\t\t\t\n';
+      final t = CsvTable.parse(csv);
+      final r = buildImportRows(t, autoMap(t.headers), options);
+      expect(r.map((e) => e.status), everyElement(RowStatus.ready));
+
+      final pku = r[0].draft!;
+      expect(pku.degree, DegreeType.msc); // "Global master in management"
+      expect(r[1].draft!.degree, DegreeType.phd); // nothing in the title: default
+      expect(pku.institutionCountry, 'CN');
+      expect((pku.feeAmount, pku.feeCurrency), ('800', 'CNY'));
+      expect(pku.opensOn!.label, 'Oct 2026');
+      final d = pku.deadline.toDeadline()!;
+      expect(d.isMonthOnly, isTrue);
+      expect(d.zone, 'Asia/Shanghai');
+      expect(d.zoneLabel, 'Dec 2026 · date not confirmed');
+      expect(pku.requirements, hasLength(3));
+
+      final neu = r[1].draft!;
+      expect(neu.institutionCountry, 'US');
+      expect(neu.feeAmount, isNull);
+      expect(neu.feeWaiver, FeeWaiver.eligible);
+      expect(neu.notes, contains('fee waiver code is: ABC2025'));
+      expect(neu.portalUsername, 'jdoe');
+      expect(neu.stage, ApplicationStage.submitted);
+
+      final lut = r[2].draft!;
+      expect(lut.deadline.date, DateTime(2027, 1, 22));
+      expect(lut.opensOn!.label, '16 Dec 2026');
+      expect(lut.stage, ApplicationStage.submitted);
+      expect(lut.notes, 'Status: applied, so check');
+
+      final unb = r[3].draft!;
+      expect((unb.feeAmount, unb.feeCurrency), ('75', 'CAD')); // bare \$ in Canada
+      expect(unb.deadline.isSet, isFalse);
+      expect(unb.notes, 'Deadline: March 31st');
+    });
+  });
+
+  group('Deadline precision', () {
+    test('month-only deadlines count to the 1st, then read "this month"', () {
+      final d = Deadline.month('Asia/Shanghai', 2026, 12);
+      expect(d.dueLabel(now: DateTime.utc(2026, 11, 20)), 'In 11 days');
+      expect(d.dueLabel(now: DateTime.utc(2026, 12, 10)), 'Due this month');
+      expect(d.dueLabel(now: DateTime.utc(2027, 1, 2)), 'Month passed');
+      expect(d.differsFromLocal, isFalse);
     });
   });
 }

@@ -32,7 +32,7 @@ Verified: the first claim returned both due users, a second claim returned 0, an
 
 ## Email content
 
-Subject: `GradTrack · 2 overdue, 3 due this week` (or `GradTrack · All clear today`).
+Subject: `gradll · 2 overdue, 3 due this week` (or `gradll · All clear today`).
 
 Body (HTML + plain-text alternative):
 - Sections **Overdue / Today / This week / Later**, each item: title, context, reason, due date in the user's time (plus university time for deadlines).

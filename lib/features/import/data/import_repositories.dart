@@ -30,6 +30,7 @@ class SupabaseImportRepository implements ImportRepository {
           'institution_name': d.institutionName.trim(),
           'country': blankToNull(d.institutionCountry)?.toUpperCase(),
           ...applicationColumns(d),
+          if (d.requirements.isNotEmpty) 'requirements': [for (final r in d.requirements) r.toJson()],
         },
     ];
     final result = await _client.rpc<List<dynamic>>(
@@ -55,9 +56,10 @@ class DemoImportRepository implements ImportRepository {
     final before = _store.institutions.length;
     for (final d in drafts) {
       final id = await repo.create(d);
-      if (seedRequirements) {
+      final seeded = d.requirements.isNotEmpty ? d.requirements.length : (seedRequirements ? 5 : 0);
+      if (seeded > 0) {
         final i = _store.applications.indexWhere((a) => a.id == id);
-        _store.applications[i] = _store.applications[i].copyWith(requirementsTotal: 5);
+        _store.applications[i] = _store.applications[i].copyWith(requirementsTotal: seeded);
       }
     }
     return ImportSummary(applications: drafts.length, institutions: _store.institutions.length - before);

@@ -111,10 +111,14 @@ class SupabaseApplicationsRepository implements ApplicationsRepository {
       feeAmount: (r['fee_amount'] as num?)?.toDouble(),
       feeCurrency: r['fee_currency'] as String?,
       feeWaiver: FeeWaiver.fromDb(r['fee_waiver'] as String?),
+      tuitionAmount: (r['tuition_estimate'] as num?)?.toDouble(),
+      tuitionCurrency: r['tuition_currency'] as String?,
+      opensOn: ApproxDate.fromDb(r['opens_on'], r['opens_precision']),
+      decisionExpected: ApproxDate.fromDb(r['decision_expected_on'], r['decision_expected_precision']),
       stage: ApplicationStage.fromDb(r['stage'] as String),
       outcome: ApplicationOutcome.fromDb(r['outcome'] as String?),
       priority: r['priority'] as int,
-      deadline: _deadline(r['deadline_at'], r['deadline_tz']),
+      deadline: _deadline(r['deadline_at'], r['deadline_tz'], r['deadline_precision']),
       fundingDeadline: _deadline(r['funding_deadline_at'], r['funding_deadline_tz']),
       requirementsTotal: countedReqs.length,
       requirementsDone: countedReqs.where((q) => q['status'] == 'done').length,
@@ -124,9 +128,13 @@ class SupabaseApplicationsRepository implements ApplicationsRepository {
     );
   }
 
-  static Deadline? _deadline(Object? at, Object? zone) => at == null
+  static Deadline? _deadline(Object? at, Object? zone, [Object? precision]) => at == null
       ? null
-      : Deadline(instant: DateTime.parse(at as String).toUtc(), zone: zone as String);
+      : Deadline(
+          instant: DateTime.parse(at as String).toUtc(),
+          zone: zone as String,
+          precision: DeadlinePrecision.fromDb(precision as String?),
+        );
 }
 
 class SupabaseInstitutionsRepository implements InstitutionsRepository {
@@ -155,6 +163,7 @@ Map<String, dynamic> applicationColumns(ApplicationDraft d) {
   final deadline = d.deadline.toDeadline();
   final funding = d.fundingDeadline.toDeadline();
   final fee = d.parsedFee;
+  final tuition = d.parsedTuition;
   return {
     'programme_name': d.programmeName.trim(),
     'degree_type': d.degree.db,
@@ -169,11 +178,18 @@ Map<String, dynamic> applicationColumns(ApplicationDraft d) {
     'funding_url': blankToNull(d.fundingUrl),
     'deadline_at': deadline?.instant.toIso8601String(),
     'deadline_tz': deadline?.zone,
+    'deadline_precision': (deadline?.precision ?? DeadlinePrecision.exact).db,
     'funding_deadline_at': funding?.instant.toIso8601String(),
     'funding_deadline_tz': funding?.zone,
     'fee_amount': fee,
     'fee_currency': fee == null ? null : d.feeCurrency?.trim().toUpperCase(),
     'fee_waiver': d.feeWaiver.db,
+    'tuition_estimate': tuition,
+    'tuition_currency': tuition == null ? null : d.tuitionCurrency?.trim().toUpperCase(),
+    'opens_on': d.opensOn?.dbDate,
+    'opens_precision': d.opensOn?.precision.db,
+    'decision_expected_on': d.decisionExpected?.dbDate,
+    'decision_expected_precision': d.decisionExpected?.precision.db,
     'notes': blankToNull(d.notes),
   };
 }

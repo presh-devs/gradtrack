@@ -13,7 +13,7 @@ Today: Tue 13 Oct 2026 · MVP-0 in daily use: **Mon 2 Nov 2026**.
 - [x] Applications list + form + workspace header/details (S3–S5)
 - [x] CSV import (S11). **Next: import your real spreadsheet**
 
-Exit: your real applications are in GradTrack with correct deadlines.
+Exit: your real applications are in gradll with correct deadlines.
 
 ## Week 2 · 19–25 Oct — Checklists, letters, Today
 

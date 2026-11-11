@@ -2,10 +2,23 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "gradtrack-web",
+      "name": "gradll-web",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["tool/serve_web.py", "8080"],
+      "runtimeArgs": [
+        "tool/serve_web.py",
+        "8080"
+      ],
       "port": 8080
+    },
+    {
+      "name": "gradll-web-demo",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "tool/serve_web.py",
+        "8090"
+      ],
+      "port": 8090,
+      "autoPort": false
     }
   ]
 }

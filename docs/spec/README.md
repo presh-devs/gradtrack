@@ -1,4 +1,4 @@
-# GradTrack — Technical Specification (MVP-0)
+# gradll — Technical Specification (MVP-0)
 
 Status: draft v0.1 · 13 Oct 2026
 Target: **MVP-0 in daily use by Mon 2 Nov 2026** (Fall 2027 cycle, deadlines Dec–Jan)

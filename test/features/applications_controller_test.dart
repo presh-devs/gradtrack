@@ -1,14 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gradtrack/features/applications/data/applications_repository_provider.dart';
-import 'package:gradtrack/features/applications/domain/application.dart';
-import 'package:gradtrack/features/applications/domain/applications_repository.dart';
-import 'package:gradtrack/features/applications/domain/application_draft.dart';
-import 'package:gradtrack/features/applications/presentation/application_editor.dart';
-import 'package:gradtrack/features/applications/presentation/applications_controller.dart';
-import 'package:gradtrack/features/attention/data/attention_repositories.dart';
-import 'package:gradtrack/features/attention/domain/attention_item.dart';
-import 'package:gradtrack/features/attention/domain/attention_repository.dart';
+import 'package:gradll/features/applications/data/applications_repository_provider.dart';
+import 'package:gradll/features/applications/domain/application.dart';
+import 'package:gradll/features/applications/domain/applications_repository.dart';
+import 'package:gradll/features/applications/domain/application_draft.dart';
+import 'package:gradll/features/applications/presentation/application_editor.dart';
+import 'package:gradll/features/applications/presentation/applications_controller.dart';
+import 'package:gradll/features/attention/data/attention_repositories.dart';
+import 'package:gradll/features/attention/domain/attention_item.dart';
+import 'package:gradll/features/attention/domain/attention_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockApps extends Mock implements ApplicationsRepository {}

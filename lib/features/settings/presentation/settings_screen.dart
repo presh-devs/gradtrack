@@ -7,6 +7,7 @@ import '../../../core/env.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/gt_widgets.dart';
 import '../../auth/presentation/auth_controllers.dart';
+import 'digest_settings_card.dart';
 
 part 'settings_screen.g.dart';
 
@@ -59,14 +60,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: GtSpace.lg),
-              Card(
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: GtSpace.lg, vertical: GtSpace.xs),
-                  leading: IconWell(icon: GtIcons.digest, tone: gt.info, size: 40),
-                  title: Text('Daily digest', style: t.titleSmall),
-                  subtitle: const Text('Timezone, send hour and test email arrive in week 3.'),
-                ),
-              ),
+              const DigestSettingsCard(),
               const SizedBox(height: GtSpace.lg),
               Card(
                 child: ListTile(

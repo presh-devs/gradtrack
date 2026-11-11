@@ -1,4 +1,4 @@
-# GradTrack
+# gradll
 
 Graduate school application tracker: deadlines (in each university's time zone), checklists, recommendation letters, professor follow-ups and a daily digest. Flutter Web PWA + Supabase.
 
@@ -12,7 +12,7 @@ Against Supabase (needs `env.json`, see below):
 flutter run -d chrome --dart-define-from-file=env.json --web-port 8080
 ```
 
-Keep `--web-port 8080`: that's the port in Supabase's allowed redirect URLs, so magic links come back to the app. In VS Code, use the **GradTrack (Supabase)** launch configuration. Without the `--dart-define-from-file`, the app falls back to demo data and logs a warning.
+Keep `--web-port 8080`: that's the port in Supabase's allowed redirect URLs, so magic links come back to the app. In VS Code, use the **gradll (Supabase)** launch configuration. Without the `--dart-define-from-file`, the app falls back to demo data and logs a warning.
 
 Demo mode (no backend, sample data, any email signs you in):
 

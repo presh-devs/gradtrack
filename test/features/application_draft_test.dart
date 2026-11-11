@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gradtrack/core/time/deadline.dart';
-import 'package:gradtrack/features/applications/domain/application.dart';
-import 'package:gradtrack/features/applications/domain/application_draft.dart';
+import 'package:gradll/core/time/deadline.dart';
+import 'package:gradll/features/applications/domain/application.dart';
+import 'package:gradll/features/applications/domain/application_draft.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 void main() {

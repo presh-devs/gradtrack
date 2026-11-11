@@ -39,7 +39,7 @@ final class TodayControllerProvider
   TodayController create() => TodayController();
 }
 
-String _$todayControllerHash() => r'ef525ded3959b06afaae17cde60c533638c5a62a';
+String _$todayControllerHash() => r'92a173789455e6d0f080e0c89b564e447ee42fd8';
 
 /// The ranked "needs attention" feed. Kept alive so returning to Today is
 /// instant; invalidated by any mutation that can change what it contains.

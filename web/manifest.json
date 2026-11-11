@@ -1,6 +1,6 @@
 {
-    "name": "GradTrack",
-    "short_name": "GradTrack",
+    "name": "gradll",
+    "short_name": "gradll",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#F7F8FC",

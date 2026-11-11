@@ -6,12 +6,12 @@ import '../features/auth/presentation/offline_banner.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import 'router.dart';
 
-class GradTrackApp extends ConsumerWidget {
-  const GradTrackApp({super.key});
+class GradllApp extends ConsumerWidget {
+  const GradllApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => MaterialApp.router(
-        title: 'GradTrack',
+        title: 'gradll',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),

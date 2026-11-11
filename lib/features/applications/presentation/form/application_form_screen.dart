@@ -343,6 +343,19 @@ class _ApplicationFormState extends ConsumerState<_ApplicationForm> {
                 ),
               ),
             ],
+            const SizedBox(height: GtSpace.lg),
+            pair(
+              ApproxDateField(
+                label: 'Applications open',
+                value: _draft.opensOn,
+                onChanged: (v) => _update((d) => d.copyWith(opensOn: v)),
+              ),
+              ApproxDateField(
+                label: 'Decision expected',
+                value: _draft.decisionExpected,
+                onChanged: (v) => _update((d) => d.copyWith(decisionExpected: v)),
+              ),
+            ),
           ],
         ),
 
@@ -491,6 +504,47 @@ class _ApplicationFormState extends ConsumerState<_ApplicationForm> {
                   labelOf: (w) => w.label,
                   onChanged: (v) => _update((d) => d.copyWith(feeWaiver: v)),
                 ),
+              ),
+              const SizedBox(height: GtSpace.md),
+              pair(
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: TextFormField(
+                        initialValue: _draft.tuitionAmount,
+                        decoration: InputDecoration(
+                          labelText: 'Tuition per year (estimate)',
+                          errorText: _error(DraftField.tuition),
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+                        onChanged: (v) => _update((d) => d.copyWith(tuitionAmount: v)),
+                      ),
+                    ),
+                    const SizedBox(width: GtSpace.md),
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        initialValue: _draft.tuitionCurrency,
+                        decoration: InputDecoration(
+                          labelText: 'Currency',
+                          hintText: 'EUR',
+                          errorText: _error(DraftField.tuitionCurrency),
+                        ),
+                        textCapitalization: TextCapitalization.characters,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(3),
+                          FilteringTextInputFormatter.allow(RegExp('[A-Za-z]')),
+                          const _UpperCase(),
+                        ],
+                        onChanged: (v) => _update((d) => d.copyWith(tuitionCurrency: v)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox.shrink(),
               ),
               const SizedBox(height: GtSpace.md),
               TextFormField(
