@@ -69,6 +69,68 @@ abstract class _$AuthStatus extends $Notifier<bool> {
   }
 }
 
+/// False while the auth server can't be reached (offline, Supabase project
+/// paused). Supabase keeps retrying in the background; [retry] forces it.
+
+@ProviderFor(AuthReachable)
+final authReachableProvider = AuthReachableProvider._();
+
+/// False while the auth server can't be reached (offline, Supabase project
+/// paused). Supabase keeps retrying in the background; [retry] forces it.
+final class AuthReachableProvider
+    extends $NotifierProvider<AuthReachable, bool> {
+  /// False while the auth server can't be reached (offline, Supabase project
+  /// paused). Supabase keeps retrying in the background; [retry] forces it.
+  AuthReachableProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authReachableProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$authReachableHash();
+
+  @$internal
+  @override
+  AuthReachable create() => AuthReachable();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$authReachableHash() => r'03356149598e255f725425871cdd8ef3b7a1fe38';
+
+/// False while the auth server can't be reached (offline, Supabase project
+/// paused). Supabase keeps retrying in the background; [retry] forces it.
+
+abstract class _$AuthReachable extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// Sign-in form state: idle (data null) → loading → sent (data true) | error.
 
 @ProviderFor(SignInController)

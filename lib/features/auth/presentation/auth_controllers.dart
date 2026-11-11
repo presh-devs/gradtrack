@@ -19,6 +19,20 @@ class AuthStatus extends _$AuthStatus {
   Future<void> signOut() => ref.read(authRepositoryProvider).signOut();
 }
 
+/// False while the auth server can't be reached (offline, Supabase project
+/// paused). Supabase keeps retrying in the background; [retry] forces it.
+@Riverpod(keepAlive: true)
+class AuthReachable extends _$AuthReachable {
+  @override
+  bool build() {
+    final sub = ref.watch(authRepositoryProvider).watchReachable().listen((ok) => state = ok);
+    ref.onDispose(sub.cancel);
+    return true;
+  }
+
+  Future<void> retry() => ref.read(authRepositoryProvider).retryConnection();
+}
+
 /// Sign-in form state: idle (data null) → loading → sent (data true) | error.
 @riverpod
 class SignInController extends _$SignInController {

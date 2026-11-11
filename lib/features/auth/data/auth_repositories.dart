@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -22,8 +25,33 @@ class SupabaseAuthRepository implements AuthRepository {
   bool get isSignedIn => _client.auth.currentSession != null;
 
   @override
-  Stream<bool> watchSignedIn() =>
-      _client.auth.onAuthStateChange.map((s) => s.session != null).distinct();
+  Stream<bool> watchSignedIn() => _client.auth.onAuthStateChange
+      // Refresh failures arrive as stream errors; they don't change whether
+      // we're signed in (an invalid token arrives as a signedOut event).
+      .handleError((Object _) {})
+      .map((s) => s.session != null)
+      .distinct();
+
+  @override
+  Stream<bool> watchReachable() => _client.auth.onAuthStateChange
+      .transform(StreamTransformer<AuthState, bool>.fromHandlers(
+        handleData: (_, sink) => sink.add(true),
+        handleError: (error, _, sink) {
+          if (kDebugMode) debugPrint('Auth refresh failed: $error');
+          sink.add(false);
+        },
+      ))
+      .distinct();
+
+  @override
+  Future<void> retryConnection() async {
+    if (_client.auth.currentSession == null) return;
+    try {
+      await _client.auth.refreshSession();
+    } catch (_) {
+      // Already reported through onAuthStateChange.
+    }
+  }
 
   @override
   String? get displayName {
@@ -60,6 +88,12 @@ class DemoAuthRepository implements AuthRepository {
 
   @override
   Stream<bool> watchSignedIn() => _store.signedInChanges;
+
+  @override
+  Stream<bool> watchReachable() => const Stream.empty();
+
+  @override
+  Future<void> retryConnection() async {}
 
   @override
   String? get displayName => 'Presh';

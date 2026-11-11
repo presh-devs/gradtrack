@@ -11,6 +11,15 @@ class AuthFailure implements Exception {
 abstract interface class AuthRepository {
   bool get isSignedIn;
   Stream<bool> watchSignedIn();
+
+  /// Whether the auth server is reachable. Emits `false` when refreshing the
+  /// session failed for network reasons (offline, project paused), and `true`
+  /// again on the next successful auth event. The session is kept meanwhile.
+  Stream<bool> watchReachable();
+
+  /// Retries the session refresh after [watchReachable] reported `false`.
+  /// The outcome arrives through [watchReachable] / [watchSignedIn].
+  Future<void> retryConnection();
   String? get displayName;
 
   /// Sends a passwordless sign-in link. [redirectTo] is where the link lands.
