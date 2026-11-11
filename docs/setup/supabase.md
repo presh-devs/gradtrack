@@ -94,7 +94,9 @@ They then open gradll and sign in with that email. Each person gets their own pr
 **Before friends can actually use it**, two more things are needed (planned for week 3):
 
 1. **A public URL.** The app currently runs only on your machine (`localhost:8080`). Deploy it to Cloudflare Pages by following [deploy.md](deploy.md).
-2. **Real email delivery.** Supabase's built-in sender only emails project team members, so friends would never receive their sign-in link. Follow [email.md](email.md): one domain and one Resend account cover both sign-in links and the daily digest.
+2. **A way for friends to sign in.** Supabase's built-in sender only emails project team members, so friends would never receive an email link. Either:
+   - turn on [Google sign-in](google-sign-in.md), which needs no email at all (quickest), or
+   - set up [email](email.md): one domain and one Resend account cover both sign-in links and the daily digest.
 
 ## 6. Import your spreadsheet
 

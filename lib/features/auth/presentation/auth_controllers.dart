@@ -1,6 +1,8 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../data/auth_repositories.dart';
+import '../domain/auth_redirect.dart';
 
 part 'auth_controllers.g.dart';
 
@@ -33,23 +35,48 @@ class AuthReachable extends _$AuthReachable {
   Future<void> retry() => ref.read(authRepositoryProvider).retryConnection();
 }
 
-/// Sign-in form state: idle (data null) → loading → sent (data true) | error.
+/// The URL the app was opened with, overridden in main(). Holds a failed
+/// Google sign-in's error until the sign-in form shows it.
+final authRedirectProvider = Provider<AuthRedirect>((ref) => AuthRedirect(Uri()));
+
+/// Sign-in form state: idle (data false) → loading → sent (data true) | error.
 @riverpod
 class SignInController extends _$SignInController {
   @override
   FutureOr<bool> build() => false;
 
+  /// A failed Google sign-in from the URL the app was opened with. Shown
+  /// until the next attempt (not thrown from build: Riverpod would retry it).
+  String? get redirectError => ref.read(authRedirectProvider).error;
+
+  /// The page navigates away to Google, so this stays loading on success.
+  Future<void> signInWithGoogle() async {
+    ref.read(authRedirectProvider).clear();
+    state = const AsyncLoading();
+    try {
+      await ref.read(authRepositoryProvider).signInWithGoogle(redirectTo: _siteRoot);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
   Future<void> sendLink(String email) async {
+    ref.read(authRedirectProvider).clear();
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       await ref
           .read(authRepositoryProvider)
-          // The site root. (Uri.replace(query: null) would *keep* the current
-          // query, e.g. /sign-in?from=…, so build from the origin instead.)
-          .sendMagicLink(email.trim(), redirectTo: Uri.parse('${Uri.base.origin}/'));
+          .sendMagicLink(email.trim(), redirectTo: _siteRoot);
       return true;
     });
   }
 
-  void reset() => state = const AsyncData(false);
+  void reset() {
+    ref.read(authRedirectProvider).clear();
+    state = const AsyncData(false);
+  }
+
+  // The site root. (Uri.replace(query: null) would *keep* the current query,
+  // e.g. /sign-in?from=…, so build from the origin instead.)
+  static Uri get _siteRoot => Uri.parse('${Uri.base.origin}/');
 }

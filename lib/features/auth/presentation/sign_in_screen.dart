@@ -121,6 +121,11 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
     final t = Theme.of(context).textTheme;
     final gt = context.gt;
     final sent = state.value == true;
+    final error = state.hasError
+        ? describeError(state.error!)
+        : state.isLoading
+            ? null
+            : ref.read(signInControllerProvider.notifier).redirectError;
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 400),
@@ -164,9 +169,9 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
                       onFieldSubmitted: (_) => _submit(),
                       enabled: !state.isLoading,
                     ),
-                    if (state.hasError) ...[
+                    if (error != null) ...[
                       const SizedBox(height: GtSpace.md),
-                      Text(describeError(state.error!), style: TextStyle(color: gt.danger.fg)),
+                      Text(error, style: TextStyle(color: gt.danger.fg)),
                     ],
                     const SizedBox(height: GtSpace.lg),
                     FilledButton(
@@ -177,6 +182,30 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
                           : const Text('Send sign-in link'),
+                    ),
+                    const SizedBox(height: GtSpace.lg),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: GtSpace.md),
+                          child: Text('or', style: t.bodySmall),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: GtSpace.lg),
+                    OutlinedButton(
+                      onPressed: state.isLoading
+                          ? null
+                          : () => ref.read(signInControllerProvider.notifier).signInWithGoogle(),
+                      child: const Text('Continue with Google'),
+                    ),
+                    const SizedBox(height: GtSpace.sm),
+                    Text(
+                      'Use the Google account for the email you were invited with.',
+                      style: t.bodySmall,
+                      textAlign: TextAlign.center,
                     ),
                     if (Env.demo) ...[
                       const SizedBox(height: GtSpace.md),

@@ -37,7 +37,11 @@ class SupabaseAuthRepository implements AuthRepository {
       .transform(StreamTransformer<AuthState, bool>.fromHandlers(
         handleData: (_, sink) => sink.add(true),
         handleError: (error, _, sink) {
-          if (kDebugMode) debugPrint('Auth refresh failed: $error');
+          if (kDebugMode) debugPrint('Auth error: $error');
+          // Only network/5xx failures mean "can't reach the server". Other
+          // auth errors (e.g. a rejected Google sign-in read from the URL)
+          // are shown on the sign-in screen instead.
+          if (error is AuthException && error is! AuthRetryableFetchException) return;
           sink.add(false);
         },
       ))
@@ -74,6 +78,20 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> signInWithGoogle({required Uri redirectTo}) async {
+    try {
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: redirectTo.toString(),
+        // Let people pick which Google account, so the invited one is used.
+        queryParams: const {'prompt': 'select_account'},
+      );
+    } on AuthException catch (e) {
+      throw AuthFailure(e.message);
+    }
+  }
+
+  @override
   Future<void> signOut() => _client.auth.signOut();
 }
 
@@ -102,6 +120,12 @@ class DemoAuthRepository implements AuthRepository {
   Future<void> sendMagicLink(String email, {required Uri redirectTo}) async {
     await Future<void>.delayed(DemoStore.latency * 2);
     if (!email.contains('@')) throw const FormatException('Enter a valid email address.');
+    _store.setSignedIn(true);
+  }
+
+  @override
+  Future<void> signInWithGoogle({required Uri redirectTo}) async {
+    await Future<void>.delayed(DemoStore.latency * 2);
     _store.setSignedIn(true);
   }
 

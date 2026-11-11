@@ -7,11 +7,15 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'app/app.dart';
 import 'core/env.dart';
+import 'features/auth/domain/auth_redirect.dart';
+import 'features/auth/presentation/auth_controllers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy(); // /applications/123 instead of /#/applications/123
   tzdata.initializeTimeZones();
+  // Read before Supabase and the router rewrite the URL.
+  final authRedirect = AuthRedirect(Uri.base);
 
   if (Env.demoByAccident && kDebugMode) {
     debugPrint(
@@ -28,5 +32,8 @@ Future<void> main() async {
     );
   }
 
-  runApp(const ProviderScope(child: GradllApp()));
+  runApp(ProviderScope(
+    overrides: [authRedirectProvider.overrideWithValue(authRedirect)],
+    child: const GradllApp(),
+  ));
 }

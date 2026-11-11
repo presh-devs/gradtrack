@@ -31,6 +31,9 @@ class _FakeAuth implements AuthRepository {
   Future<void> sendMagicLink(String email, {required Uri redirectTo}) async {}
 
   @override
+  Future<void> signInWithGoogle({required Uri redirectTo}) async {}
+
+  @override
   Future<void> signOut() async {}
 }
 
