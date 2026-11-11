@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../core/env.dart';
 import '../data/auth_repositories.dart';
+import '../data/google/google_identity.dart';
+import '../domain/google_nonce.dart';
 import '../domain/auth_redirect.dart';
 
 part 'auth_controllers.g.dart';
@@ -49,16 +52,18 @@ class SignInController extends _$SignInController {
   /// until the next attempt (not thrown from build: Riverpod would retry it).
   String? get redirectError => ref.read(authRedirectProvider).error;
 
-  /// The page navigates away to Google, so this stays loading on success.
-  Future<void> signInWithGoogle() async {
+  /// Called with the ID token from Google's button. On success the router
+  /// leaves the sign-in screen.
+  Future<void> finishGoogle(String idToken, {required String nonce}) async {
     ref.read(authRedirectProvider).clear();
     state = const AsyncLoading();
-    try {
-      await ref.read(authRepositoryProvider).signInWithGoogle(redirectTo: _siteRoot);
-    } catch (e, st) {
-      state = AsyncError(e, st);
-    }
+    state = await AsyncValue.guard(() async {
+      await ref.read(authRepositoryProvider).signInWithGoogleIdToken(idToken, nonce: nonce);
+      return false;
+    });
   }
+
+  void googleFailed(Object error) => state = AsyncError(error, StackTrace.current);
 
   Future<void> sendLink(String email) async {
     ref.read(authRedirectProvider).clear();
@@ -79,4 +84,22 @@ class SignInController extends _$SignInController {
   // The site root. (Uri.replace(query: null) would *keep* the current query,
   // e.g. /sign-in?from=…, so build from the origin instead.)
   static Uri get _siteRoot => Uri.parse('${Uri.base.origin}/');
+}
+
+/// Google's sign-in button, set up once per page load. True when it can be
+/// shown (web, real backend, client ID configured).
+@Riverpod(keepAlive: true)
+class GoogleButtonReady extends _$GoogleButtonReady {
+  @override
+  Future<bool> build() async {
+    if (Env.demo || Env.googleClientId.isEmpty || !googleIdentitySupported) return false;
+    final nonce = GoogleNonce.generate();
+    await initGoogleIdentity(
+      clientId: Env.googleClientId,
+      hashedNonce: nonce.hashed,
+      onIdToken: (token) => ref.read(signInControllerProvider.notifier).finishGoogle(token, nonce: nonce.raw),
+      onError: (e) => ref.read(signInControllerProvider.notifier).googleFailed(e),
+    );
+    return true;
+  }
 }

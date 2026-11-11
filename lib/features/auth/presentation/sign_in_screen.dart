@@ -6,6 +6,7 @@ import '../../../app/shell.dart';
 import '../../../core/env.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/async_value_view.dart';
+import '../data/google/google_identity.dart';
 import 'auth_controllers.dart';
 
 class SignInScreen extends StatelessWidget {
@@ -195,18 +196,7 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
                       ],
                     ),
                     const SizedBox(height: GtSpace.lg),
-                    OutlinedButton(
-                      onPressed: state.isLoading
-                          ? null
-                          : () => ref.read(signInControllerProvider.notifier).signInWithGoogle(),
-                      child: const Text('Continue with Google'),
-                    ),
-                    const SizedBox(height: GtSpace.sm),
-                    Text(
-                      'Use the Google account for the email you were invited with.',
-                      style: t.bodySmall,
-                      textAlign: TextAlign.center,
-                    ),
+                    _GoogleButton(enabled: !state.isLoading),
                     if (Env.demo) ...[
                       const SizedBox(height: GtSpace.md),
                       Text(
@@ -220,5 +210,37 @@ class _SignInFormState extends ConsumerState<_SignInForm> {
               ),
       ),
     );
+  }
+}
+
+/// Google's own button on the web (its prompt then names gradll's address);
+/// a plain button in demo mode. Hidden if Google isn't configured.
+class _GoogleButton extends ConsumerWidget {
+  const _GoogleButton({required this.enabled});
+
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (Env.demo) {
+      return OutlinedButton(
+        onPressed: enabled
+            ? () => ref.read(signInControllerProvider.notifier).finishGoogle('demo', nonce: '')
+            : null,
+        child: const Text('Continue with Google'),
+      );
+    }
+    final ready = ref.watch(googleButtonReadyProvider);
+    return switch (ready) {
+      AsyncData(value: true) => LayoutBuilder(
+          builder: (context, c) => Center(
+            // Google draws the button itself, 200–400 px wide.
+            child: googleButton(width: c.maxWidth.clamp(200, 400).toDouble()),
+          ),
+        ),
+      AsyncLoading() => const SizedBox(height: 44),
+      // Not configured, or Google's script failed to load: email still works.
+      _ => const SizedBox.shrink(),
+    };
   }
 }

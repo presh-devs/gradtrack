@@ -1,10 +1,10 @@
 # Sign in with Google
 
-Google sign-in lets invited friends in **without gradll sending any email**, so it works before your domain and Resend are set up. Email links keep working alongside it.
+Google sign-in needs **no email from gradll**, so it works before your domain and Resend are set up. Email links keep working alongside it.
 
-The invite-only rule still applies: Supabase runs `hook_before_user_created` for Google sign-ups too, so only emails in `signup_allowlist` get an account. Add each friend's **Google account email** (usually their Gmail) to the allowlist.
+gradll uses Google's own button (Google Identity Services). Google signs the person in on gradll's page and hands back an ID token, which Supabase checks (including a one-time nonce) and turns into a session. Because nothing redirects through Supabase, Google's prompt names **gradll.pages.dev**, not the Supabase project address. To show the name **gradll** instead, Google requires brand verification, which needs a domain you own (homepage and privacy policy on it).
 
-If you've already signed in with an email link, signing in with Google using the same address opens the same account.
+**Who can sign up with Google:** anyone, until there are 25 accounts in total ([supabase.md §5](supabase.md#5-who-can-sign-up)). Emails on `signup_allowlist` always get in. If you've already signed in with an email link, Google with the same address opens the same account.
 
 ## 1. Google Cloud (you, ~10 minutes)
 
@@ -38,23 +38,32 @@ skip_nonce_check = false
 
 Before a later `config push`, either export `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` or answer **no** if the push wants to change the Google provider.
 
-## 4. Deploy
+## 4. Client ID in the app
+
+Google's button needs the Client ID at build time. Add it to `env.json` (see `env.example.json`):
+
+```json
+"GOOGLE_CLIENT_ID": "1234-abc.apps.googleusercontent.com"
+```
+
+Without it, the button is hidden and email sign-in still works. Then deploy:
 
 ```bash
 tool/deploy_web.sh
 ```
 
+Every address the app is opened from must be an **Authorized JavaScript origin** (step 1.4), or Google's button shows an error.
+
 ## What friends see
 
-1. Open https://gradll.pages.dev → **Continue with Google** → choose the invited Google account.
-2. Google's screen says it's signing in to `qvvzfsyxboyqdubephpn.supabase.co`. That's gradll's backend; a custom auth domain to hide it is a paid Supabase add-on.
-3. A Google account that isn't invited comes back to the sign-in page with *"gradll is invite-only…"* and no account is created.
+1. Open https://gradll.pages.dev → **Continue with Google** → a Google popup to pick an account, naming `gradll.pages.dev`.
+2. They're in. If 25 accounts already exist and they aren't on the allowlist, they see *"gradll is full right now…"* and no account is created.
 
 ## Troubleshooting
 
 | Symptom | Likely cause |
 |---|---|
-| `redirect_uri_mismatch` from Google | The Supabase callback URL in step 1.4 is missing or mistyped. |
-| A page showing `Unsupported provider: provider is not enabled` | Step 2 isn't saved. |
-| "gradll is invite-only" for an invited friend | They picked a different Google account than the allowlisted email. |
-| Back on the sign-in page with no message | The site isn't in *URL Configuration → Redirect URLs* ([deploy.md](deploy.md) §2). |
+| No Google button | `GOOGLE_CLIENT_ID` missing from `env.json` at build time, or Google's script was blocked (ad blocker). |
+| Google says "origin is not allowed" / `origin_mismatch` | Add the site's address to *Authorized JavaScript origins*. |
+| "Unacceptable audience" or "nonce" error | The Client ID in `env.json` differs from the one in Supabase's Google provider. |
+| Popup opens and closes, nothing happens | The browser blocked third-party sign-in; try another browser or use the email link. |

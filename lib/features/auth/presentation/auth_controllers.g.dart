@@ -159,11 +159,65 @@ final class SignInControllerProvider
   SignInController create() => SignInController();
 }
 
-String _$signInControllerHash() => r'90db5e7cb3c4f4f86281b51185340e8b80714dd5';
+String _$signInControllerHash() => r'edf342ee4e3e07c00abf7cc55dd2e7380fe6f93b';
 
 /// Sign-in form state: idle (data false) → loading → sent (data true) | error.
 
 abstract class _$SignInController extends $AsyncNotifier<bool> {
+  FutureOr<bool> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<bool>, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<bool>, bool>,
+              AsyncValue<bool>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+/// Google's sign-in button, set up once per page load. True when it can be
+/// shown (web, real backend, client ID configured).
+
+@ProviderFor(GoogleButtonReady)
+final googleButtonReadyProvider = GoogleButtonReadyProvider._();
+
+/// Google's sign-in button, set up once per page load. True when it can be
+/// shown (web, real backend, client ID configured).
+final class GoogleButtonReadyProvider
+    extends $AsyncNotifierProvider<GoogleButtonReady, bool> {
+  /// Google's sign-in button, set up once per page load. True when it can be
+  /// shown (web, real backend, client ID configured).
+  GoogleButtonReadyProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'googleButtonReadyProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$googleButtonReadyHash();
+
+  @$internal
+  @override
+  GoogleButtonReady create() => GoogleButtonReady();
+}
+
+String _$googleButtonReadyHash() => r'df55bc30a364b84004d2921a3a0cd0228b19e43f';
+
+/// Google's sign-in button, set up once per page load. True when it can be
+/// shown (web, real backend, client ID configured).
+
+abstract class _$GoogleButtonReady extends $AsyncNotifier<bool> {
   FutureOr<bool> build();
   @$mustCallSuper
   @override

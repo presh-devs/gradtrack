@@ -25,8 +25,8 @@ abstract interface class AuthRepository {
   /// Sends a passwordless sign-in link. [redirectTo] is where the link lands.
   Future<void> sendMagicLink(String email, {required Uri redirectTo});
 
-  /// Leaves for Google's sign-in page; the browser comes back to
-  /// [redirectTo] signed in, or with an error (see AuthRedirect).
-  Future<void> signInWithGoogle({required Uri redirectTo});
+  /// Exchanges an ID token from Google's sign-in button for a session.
+  /// [nonce] is the raw nonce whose SHA-256 was given to Google.
+  Future<void> signInWithGoogleIdToken(String idToken, {required String nonce});
   Future<void> signOut();
 }

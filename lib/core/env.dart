@@ -9,6 +9,8 @@
 abstract final class Env {
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  /// Web OAuth client for Google's sign-in button (not secret). Empty hides it.
+  static const googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
   static const _forceDemo = bool.fromEnvironment('GT_DEMO');
 
   static bool get demo => _forceDemo || supabaseUrl.isEmpty || supabaseKey.isEmpty;

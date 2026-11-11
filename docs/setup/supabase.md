@@ -69,9 +69,17 @@ Open <http://localhost:8080> and sign in with your email. Opening the magic link
 
 > **Email limits.** Supabase's built-in email service is meant for testing: it only sends to a small number of addresses (typically your project's team members, i.e. the email you signed up to Supabase with) and is heavily rate-limited. Sign in with that email. The daily digest (week 3) needs a proper sender (Resend), which will also be set as the auth SMTP.
 
-## 5. Invite-only sign-ups
+## 5. Who can sign up
 
-Sign-ups are **on but invite-only**. Before Supabase creates any account, it calls `public.hook_before_user_created`, which only allows emails listed in `public.signup_allowlist` (migration `20261014000005`). Anyone else sees *"gradll is invite-only…"*, and no account is created and no email is sent. Existing accounts, including yours, aren't affected.
+Before Supabase creates any account, it calls `public.hook_before_user_created` (latest version: migration `20261112000011`):
+
+| Sign-up | Allowed when |
+|---|---|
+| Email on `public.signup_allowlist` | Always, by email link or Google |
+| Any **Google** account | While there are fewer than **25** accounts in total; after that *"gradll is full right now…"* |
+| Anyone else by **email link** | Never: *"gradll is invite-only for email sign-in…"*, so nobody can make gradll email arbitrary addresses |
+
+Existing accounts, including yours, are never affected. To change the cap, edit `v_cap` in that function in a new migration.
 
 Apply it with migrations **first**, then config, because the hook function must exist before Auth is told to call it:
 
@@ -83,13 +91,13 @@ supabase db push
 supabase config push
 ```
 
-**Invite a friend:** *Table Editor → `signup_allowlist` → Insert row* (email plus an optional note), or in the SQL editor:
+**Let someone in past the cap, or by email link:** *Table Editor → `signup_allowlist` → Insert row* (email plus an optional note), or in the SQL editor:
 
 ```sql
 insert into public.signup_allowlist (email, note) values ('friend@example.com', 'Ada');
 ```
 
-They then open gradll and sign in with that email. Each person gets their own private workspace; nobody can see anyone else's applications.
+They then open gradll and sign in with that email (or with Google). Each person gets their own private workspace; nobody can see anyone else's applications.
 
 **Before friends can actually use it**, two more things are needed (planned for week 3):
 

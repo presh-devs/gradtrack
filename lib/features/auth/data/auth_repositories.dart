@@ -78,15 +78,11 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> signInWithGoogle({required Uri redirectTo}) async {
+  Future<void> signInWithGoogleIdToken(String idToken, {required String nonce}) async {
     try {
-      await _client.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: redirectTo.toString(),
-        // Let people pick which Google account, so the invited one is used.
-        queryParams: const {'prompt': 'select_account'},
-      );
+      await _client.auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken, nonce: nonce);
     } on AuthException catch (e) {
+      // 403 from the sign-up hook ("gradll is full right now…") is user-facing.
       throw AuthFailure(e.message);
     }
   }
@@ -124,7 +120,7 @@ class DemoAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> signInWithGoogle({required Uri redirectTo}) async {
+  Future<void> signInWithGoogleIdToken(String idToken, {required String nonce}) async {
     await Future<void>.delayed(DemoStore.latency * 2);
     _store.setSignedIn(true);
   }
