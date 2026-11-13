@@ -11,10 +11,12 @@ import '../../../../core/widgets/gt_widgets.dart';
 import '../../domain/application.dart';
 import '../../domain/application_draft.dart';
 import '../../domain/institution.dart';
+import '../../domain/programme_extraction.dart';
 import '../application_editor.dart';
 import '../applications_controller.dart';
 import '../stage_style.dart';
 import 'deadline_field.dart';
+import 'fill_from_page.dart';
 
 /// `/applications/new` and `/applications/:id/edit` (spec S5).
 class ApplicationFormScreen extends ConsumerWidget {
@@ -88,6 +90,20 @@ class _ApplicationFormState extends ConsumerState<_ApplicationForm> {
   late bool _showFunding = widget.initial.fundingDeadline.isSet;
   late bool _showMore = widget.id != null;
   bool _attempted = false;
+
+  /// Bumped when a programme page fills the form, so every field rebuilds
+  /// with its new initial value.
+  int _generation = 0;
+
+  void _applyExtraction(ProgrammeExtraction x) {
+    final institutions = ref.read(institutionsProvider).value ?? const <Institution>[];
+    setState(() {
+      _draft = x.applyTo(_draft, institutions: institutions);
+      _showFunding = _showFunding || _draft.fundingDeadline.isSet;
+      _showMore = true;
+      _generation++;
+    });
+  }
 
   @override
   void initState() {
@@ -224,364 +240,383 @@ class _ApplicationFormState extends ConsumerState<_ApplicationForm> {
               ? 'Only the university and programme are required. Add the rest any time.'
               : _draft.institutionName,
         ),
+        if (_isNew) ...[
+          FillFromPageCard(
+            onFilled: _applyExtraction,
+            requirements: _draft.requirements,
+            onRemoveRequirement: (r) => _update(
+              (d) => d.copyWith(requirements: [for (final x in d.requirements) if (x != r) x]),
+            ),
+          ),
+          const SizedBox(height: GtSpace.lg),
+        ],
 
-        // ── Programme ──────────────────────────────────────────────
-        _Section(
-          title: 'Programme',
-          icon: GtIcons.university,
-          tone: gt.info,
-          children: [
-            _InstitutionField(
-              draft: _draft,
-              errorText: _error(DraftField.institution),
-              onUpdate: _update,
-            ),
-            if (_draft.createsInstitution &&
-                _draft.institutionName.trim().isNotEmpty) ...[
-              const SizedBox(height: GtSpace.md),
-              _CountryField(
-                value: _draft.institutionCountry,
-                onChanged: (code) => _update((d) {
-                  final suggested = countryDefaultZones[code];
-                  // Prefill the deadline zone from the country unless the date is already set up.
-                  final adjustZone = suggested != null && !d.deadline.isSet;
-                  return d.copyWith(
-                    institutionCountry: code,
-                    deadline: adjustZone
-                        ? d.deadline.copyWith(zone: suggested)
-                        : d.deadline,
-                    fundingDeadline: adjustZone
-                        ? d.fundingDeadline.copyWith(zone: suggested)
-                        : d.fundingDeadline,
-                  );
-                }),
-              ),
-            ],
-            const SizedBox(height: GtSpace.md),
-            pair(
-              TextFormField(
-                initialValue: _draft.programmeName,
-                decoration: InputDecoration(
-                  labelText: 'Programme name *',
-                  hintText: 'e.g. Computer Science',
-                  errorText: _error(DraftField.programmeName),
-                ),
-                textInputAction: TextInputAction.next,
-                onChanged: (v) => _update((d) => d.copyWith(programmeName: v)),
-              ),
-              _Dropdown<DegreeType>(
-                label: 'Degree',
-                value: _draft.degree,
-                values: DegreeType.values,
-                labelOf: (d) => d.label,
-                onChanged: (v) => _update((d) => d.copyWith(degree: v)),
-              ),
-            ),
-            const SizedBox(height: GtSpace.md),
-            pair(
-              TextFormField(
-                initialValue: _draft.department,
-                decoration: const InputDecoration(labelText: 'Department'),
-                onChanged: (v) => _update((d) => d.copyWith(department: v)),
-              ),
-              TextFormField(
-                initialValue: _draft.researchArea,
-                decoration: const InputDecoration(
-                  labelText: 'Research area',
-                  hintText: 'e.g. NLP, robotics',
-                ),
-                onChanged: (v) => _update((d) => d.copyWith(researchArea: v)),
-              ),
-            ),
-            const SizedBox(height: GtSpace.md),
-            TextFormField(
-              initialValue: _draft.location,
-              decoration: const InputDecoration(
-                labelText: 'Location',
-                hintText: 'City, state, e.g. Boston, MA',
-              ),
-              textCapitalization: TextCapitalization.words,
-              onChanged: (v) => _update((d) => d.copyWith(location: v)),
-            ),
-            const SizedBox(height: GtSpace.sm),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _draft.requiresProfessorAcceptance,
-              onChanged: (on) => _update((d) => d.copyWith(requiresProfessorAcceptance: on)),
-              title: Text(
-                'Needs a professor’s acceptance first',
-                style: t.titleSmall,
-              ),
-              subtitle: const Text(
-                'A professor must agree to supervise you before you can apply.',
-              ),
-            ),
-          ],
-        ),
-
-        // ── Deadlines ──────────────────────────────────────────────
-        _Section(
-          title: 'Deadlines',
-          subtitle: 'Enter them exactly as the university publishes them, in its own time zone.',
-          icon: GtIcons.deadline,
-          tone: gt.warning,
-          children: [
-            DeadlineField(
-              label: 'Application deadline',
-              value: _draft.deadline,
-              errorText: _error(DraftField.deadline),
-              onUpdate: (f) =>
-                  _update((d) => d.copyWith(deadline: f(d.deadline))),
-            ),
-            const SizedBox(height: GtSpace.md),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              value: _showFunding,
-              onChanged: (on) => setState(() {
-                _showFunding = on;
-                if (on && !_draft.fundingDeadline.isSet) {
-                  _draft = _draft.copyWith(
-                    fundingDeadline: _draft.fundingDeadline.copyWith(
-                      zone: _draft.deadline.zone,
-                    ),
-                  );
-                }
-              }),
-              title: Text(
-                'Separate funding or scholarship deadline',
-                style: t.titleSmall,
-              ),
-              subtitle: const Text(
-                'Often earlier than the application deadline.',
-              ),
-            ),
-            if (_showFunding) ...[
-              const SizedBox(height: GtSpace.sm),
-              DeadlineField(
-                label: 'Funding deadline',
-                value: _draft.fundingDeadline,
-                errorText: _error(DraftField.fundingDeadline),
-                onUpdate: (f) => _update(
-                  (d) => d.copyWith(fundingDeadline: f(d.fundingDeadline)),
-                ),
-              ),
-            ],
-            const SizedBox(height: GtSpace.lg),
-            pair(
-              ApproxDateField(
-                label: 'Applications open',
-                value: _draft.opensOn,
-                onChanged: (v) => _update((d) => d.copyWith(opensOn: v)),
-              ),
-              ApproxDateField(
-                label: 'Decision expected',
-                value: _draft.decisionExpected,
-                onChanged: (v) => _update((d) => d.copyWith(decisionExpected: v)),
-              ),
-            ),
-          ],
-        ),
-
-        // ── Status ─────────────────────────────────────────────────
-        _Section(
-          title: 'Status',
-          icon: GtIcons.checklist,
-          tone: gt.success,
-          children: [
-            pair(
-              _Dropdown<ApplicationStage>(
-                label: 'Stage',
-                value: _draft.stage,
-                values: ApplicationStage.values,
-                labelOf: (s) => s.label,
-                leading: (s) => Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: s.tone(gt).fg,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                onChanged: (v) => _update((d) => d.copyWith(stage: v)),
-              ),
-              SegmentedButton<int>(
-                segments: const [
-                  ButtonSegment(value: 1, label: Text('Top choice')),
-                  ButtonSegment(value: 2, label: Text('Normal')),
-                  ButtonSegment(value: 3, label: Text('Backup')),
-                ],
-                selected: {_draft.priority},
-                showSelectedIcon: false,
-                onSelectionChanged: (s) =>
-                    _update((d) => d.copyWith(priority: s.first)),
-              ),
-            ),
-          ],
-        ),
-
-        // ── More details ───────────────────────────────────────────
-        Card(
-          margin: const EdgeInsets.only(bottom: GtSpace.lg),
-          clipBehavior: Clip.antiAlias,
-          child: ExpansionTile(
-            initiallyExpanded: _showMore,
-            onExpansionChanged: (open) => _showMore = open,
-            shape: const Border(),
-            collapsedShape: const Border(),
-            tilePadding: const EdgeInsets.symmetric(
-              horizontal: GtSpace.lg,
-              vertical: GtSpace.xs,
-            ),
-            childrenPadding: const EdgeInsets.fromLTRB(
-              GtSpace.lg,
-              0,
-              GtSpace.lg,
-              GtSpace.lg,
-            ),
-            leading: IconWell(icon: GtIcons.note, tone: gt.violet, size: 36),
-            title: Text('More details', style: t.titleMedium),
-            subtitle: Text('Links, portal, fees and notes', style: t.bodySmall),
+        KeyedSubtree(
+          key: ValueKey(_generation),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              pair(
-                _UrlField(
-                  label: 'Programme page',
-                  value: _draft.programmeUrl,
-                  errorText: _error(DraftField.programmeUrl),
-                  onChanged: (v) => _update((d) => d.copyWith(programmeUrl: v)),
-                ),
-                _UrlField(
-                  label: 'Application portal',
-                  value: _draft.portalUrl,
-                  errorText: _error(DraftField.portalUrl),
-                  onChanged: (v) => _update((d) => d.copyWith(portalUrl: v)),
-                ),
-              ),
-              const SizedBox(height: GtSpace.md),
-              pair(
-                TextFormField(
-                  initialValue: _draft.portalUsername,
-                  decoration: const InputDecoration(
-                    labelText: 'Portal username',
-                    helperText: 'Never store your password here.',
+              // ── Programme ──────────────────────────────────────────────
+              _Section(
+                title: 'Programme',
+                icon: GtIcons.university,
+                tone: gt.info,
+                children: [
+                  _InstitutionField(
+                    draft: _draft,
+                    errorText: _error(DraftField.institution),
+                    onUpdate: _update,
                   ),
-                  autofillHints: const <String>[],
-                  onChanged: (v) =>
-                      _update((d) => d.copyWith(portalUsername: v)),
-                ),
-                _UrlField(
-                  label: 'Funding information',
-                  value: _draft.fundingUrl,
-                  errorText: _error(DraftField.fundingUrl),
-                  onChanged: (v) => _update((d) => d.copyWith(fundingUrl: v)),
-                ),
-              ),
-              const SizedBox(height: GtSpace.md),
-              pair(
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: TextFormField(
-                        initialValue: _draft.feeAmount,
-                        decoration: InputDecoration(
-                          labelText: 'Application fee',
-                          errorText: _error(DraftField.fee),
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                        ],
-                        onChanged: (v) =>
-                            _update((d) => d.copyWith(feeAmount: v)),
-                      ),
+                  if (_draft.createsInstitution &&
+                      _draft.institutionName.trim().isNotEmpty) ...[
+                    const SizedBox(height: GtSpace.md),
+                    _CountryField(
+                      value: _draft.institutionCountry,
+                      onChanged: (code) => _update((d) {
+                        final suggested = countryDefaultZones[code];
+                        // Prefill the deadline zone from the country unless the date is already set up.
+                        final adjustZone = suggested != null && !d.deadline.isSet;
+                        return d.copyWith(
+                          institutionCountry: code,
+                          deadline: adjustZone
+                              ? d.deadline.copyWith(zone: suggested)
+                              : d.deadline,
+                          fundingDeadline: adjustZone
+                              ? d.fundingDeadline.copyWith(zone: suggested)
+                              : d.fundingDeadline,
+                        );
+                      }),
                     ),
-                    const SizedBox(width: GtSpace.md),
-                    Expanded(
-                      flex: 2,
-                      child: TextFormField(
-                        initialValue: _draft.feeCurrency,
-                        decoration: InputDecoration(
-                          labelText: 'Currency',
-                          hintText: 'CAD',
-                          errorText: _error(DraftField.feeCurrency),
-                        ),
-                        textCapitalization: TextCapitalization.characters,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(3),
-                          FilteringTextInputFormatter.allow(RegExp('[A-Za-z]')),
-                          const _UpperCase(),
-                        ],
-                        onChanged: (v) =>
-                            _update((d) => d.copyWith(feeCurrency: v)),
+                  ],
+                  const SizedBox(height: GtSpace.md),
+                  pair(
+                    TextFormField(
+                      initialValue: _draft.programmeName,
+                      decoration: InputDecoration(
+                        labelText: 'Programme name *',
+                        hintText: 'e.g. Computer Science',
+                        errorText: _error(DraftField.programmeName),
+                      ),
+                      textInputAction: TextInputAction.next,
+                      onChanged: (v) => _update((d) => d.copyWith(programmeName: v)),
+                    ),
+                    _Dropdown<DegreeType>(
+                      label: 'Degree',
+                      value: _draft.degree,
+                      values: DegreeType.values,
+                      labelOf: (d) => d.label,
+                      onChanged: (v) => _update((d) => d.copyWith(degree: v)),
+                    ),
+                  ),
+                  const SizedBox(height: GtSpace.md),
+                  pair(
+                    TextFormField(
+                      initialValue: _draft.department,
+                      decoration: const InputDecoration(labelText: 'Department'),
+                      onChanged: (v) => _update((d) => d.copyWith(department: v)),
+                    ),
+                    TextFormField(
+                      initialValue: _draft.researchArea,
+                      decoration: const InputDecoration(
+                        labelText: 'Research area',
+                        hintText: 'e.g. NLP, robotics',
+                      ),
+                      onChanged: (v) => _update((d) => d.copyWith(researchArea: v)),
+                    ),
+                  ),
+                  const SizedBox(height: GtSpace.md),
+                  TextFormField(
+                    initialValue: _draft.location,
+                    decoration: const InputDecoration(
+                      labelText: 'Location',
+                      hintText: 'City, state, e.g. Boston, MA',
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    onChanged: (v) => _update((d) => d.copyWith(location: v)),
+                  ),
+                  const SizedBox(height: GtSpace.sm),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _draft.requiresProfessorAcceptance,
+                    onChanged: (on) => _update((d) => d.copyWith(requiresProfessorAcceptance: on)),
+                    title: Text(
+                      'Needs a professor’s acceptance first',
+                      style: t.titleSmall,
+                    ),
+                    subtitle: const Text(
+                      'A professor must agree to supervise you before you can apply.',
+                    ),
+                  ),
+                ],
+              ),
+
+              // ── Deadlines ──────────────────────────────────────────────
+              _Section(
+                title: 'Deadlines',
+                subtitle: 'Enter them exactly as the university publishes them, in its own time zone.',
+                icon: GtIcons.deadline,
+                tone: gt.warning,
+                children: [
+                  DeadlineField(
+                    label: 'Application deadline',
+                    value: _draft.deadline,
+                    errorText: _error(DraftField.deadline),
+                    onUpdate: (f) =>
+                        _update((d) => d.copyWith(deadline: f(d.deadline))),
+                  ),
+                  const SizedBox(height: GtSpace.md),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _showFunding,
+                    onChanged: (on) => setState(() {
+                      _showFunding = on;
+                      if (on && !_draft.fundingDeadline.isSet) {
+                        _draft = _draft.copyWith(
+                          fundingDeadline: _draft.fundingDeadline.copyWith(
+                            zone: _draft.deadline.zone,
+                          ),
+                        );
+                      }
+                    }),
+                    title: Text(
+                      'Separate funding or scholarship deadline',
+                      style: t.titleSmall,
+                    ),
+                    subtitle: const Text(
+                      'Often earlier than the application deadline.',
+                    ),
+                  ),
+                  if (_showFunding) ...[
+                    const SizedBox(height: GtSpace.sm),
+                    DeadlineField(
+                      label: 'Funding deadline',
+                      value: _draft.fundingDeadline,
+                      errorText: _error(DraftField.fundingDeadline),
+                      onUpdate: (f) => _update(
+                        (d) => d.copyWith(fundingDeadline: f(d.fundingDeadline)),
                       ),
                     ),
                   ],
-                ),
-                _Dropdown<FeeWaiver>(
-                  label: 'Fee waiver',
-                  value: _draft.feeWaiver,
-                  values: FeeWaiver.values,
-                  labelOf: (w) => w.label,
-                  onChanged: (v) => _update((d) => d.copyWith(feeWaiver: v)),
-                ),
+                  const SizedBox(height: GtSpace.lg),
+                  pair(
+                    ApproxDateField(
+                      label: 'Applications open',
+                      value: _draft.opensOn,
+                      onChanged: (v) => _update((d) => d.copyWith(opensOn: v)),
+                    ),
+                    ApproxDateField(
+                      label: 'Decision expected',
+                      value: _draft.decisionExpected,
+                      onChanged: (v) => _update((d) => d.copyWith(decisionExpected: v)),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: GtSpace.md),
-              pair(
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: TextFormField(
-                        initialValue: _draft.tuitionAmount,
-                        decoration: InputDecoration(
-                          labelText: 'Tuition per year (estimate)',
-                          errorText: _error(DraftField.tuition),
+
+              // ── Status ─────────────────────────────────────────────────
+              _Section(
+                title: 'Status',
+                icon: GtIcons.checklist,
+                tone: gt.success,
+                children: [
+                  pair(
+                    _Dropdown<ApplicationStage>(
+                      label: 'Stage',
+                      value: _draft.stage,
+                      values: ApplicationStage.values,
+                      labelOf: (s) => s.label,
+                      leading: (s) => Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: s.tone(gt).fg,
+                          shape: BoxShape.circle,
                         ),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-                        onChanged: (v) => _update((d) => d.copyWith(tuitionAmount: v)),
+                      ),
+                      onChanged: (v) => _update((d) => d.copyWith(stage: v)),
+                    ),
+                    SegmentedButton<int>(
+                      segments: const [
+                        ButtonSegment(value: 1, label: Text('Top choice')),
+                        ButtonSegment(value: 2, label: Text('Normal')),
+                        ButtonSegment(value: 3, label: Text('Backup')),
+                      ],
+                      selected: {_draft.priority},
+                      showSelectedIcon: false,
+                      onSelectionChanged: (s) =>
+                          _update((d) => d.copyWith(priority: s.first)),
+                    ),
+                  ),
+                ],
+              ),
+
+              // ── More details ───────────────────────────────────────────
+              Card(
+                margin: const EdgeInsets.only(bottom: GtSpace.lg),
+                clipBehavior: Clip.antiAlias,
+                child: ExpansionTile(
+                  initiallyExpanded: _showMore,
+                  onExpansionChanged: (open) => _showMore = open,
+                  shape: const Border(),
+                  collapsedShape: const Border(),
+                  tilePadding: const EdgeInsets.symmetric(
+                    horizontal: GtSpace.lg,
+                    vertical: GtSpace.xs,
+                  ),
+                  childrenPadding: const EdgeInsets.fromLTRB(
+                    GtSpace.lg,
+                    0,
+                    GtSpace.lg,
+                    GtSpace.lg,
+                  ),
+                  leading: IconWell(icon: GtIcons.note, tone: gt.violet, size: 36),
+                  title: Text('More details', style: t.titleMedium),
+                  subtitle: Text('Links, portal, fees and notes', style: t.bodySmall),
+                  children: [
+                    pair(
+                      _UrlField(
+                        label: 'Programme page',
+                        value: _draft.programmeUrl,
+                        errorText: _error(DraftField.programmeUrl),
+                        onChanged: (v) => _update((d) => d.copyWith(programmeUrl: v)),
+                      ),
+                      _UrlField(
+                        label: 'Application portal',
+                        value: _draft.portalUrl,
+                        errorText: _error(DraftField.portalUrl),
+                        onChanged: (v) => _update((d) => d.copyWith(portalUrl: v)),
                       ),
                     ),
-                    const SizedBox(width: GtSpace.md),
-                    Expanded(
-                      flex: 2,
-                      child: TextFormField(
-                        initialValue: _draft.tuitionCurrency,
-                        decoration: InputDecoration(
-                          labelText: 'Currency',
-                          hintText: 'EUR',
-                          errorText: _error(DraftField.tuitionCurrency),
+                    const SizedBox(height: GtSpace.md),
+                    pair(
+                      TextFormField(
+                        initialValue: _draft.portalUsername,
+                        decoration: const InputDecoration(
+                          labelText: 'Portal username',
+                          helperText: 'Never store your password here.',
                         ),
-                        textCapitalization: TextCapitalization.characters,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(3),
-                          FilteringTextInputFormatter.allow(RegExp('[A-Za-z]')),
-                          const _UpperCase(),
-                        ],
-                        onChanged: (v) => _update((d) => d.copyWith(tuitionCurrency: v)),
+                        autofillHints: const <String>[],
+                        onChanged: (v) =>
+                            _update((d) => d.copyWith(portalUsername: v)),
                       ),
+                      _UrlField(
+                        label: 'Funding information',
+                        value: _draft.fundingUrl,
+                        errorText: _error(DraftField.fundingUrl),
+                        onChanged: (v) => _update((d) => d.copyWith(fundingUrl: v)),
+                      ),
+                    ),
+                    const SizedBox(height: GtSpace.md),
+                    pair(
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: TextFormField(
+                              initialValue: _draft.feeAmount,
+                              decoration: InputDecoration(
+                                labelText: 'Application fee',
+                                errorText: _error(DraftField.fee),
+                              ),
+                              keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                              ],
+                              onChanged: (v) =>
+                                  _update((d) => d.copyWith(feeAmount: v)),
+                            ),
+                          ),
+                          const SizedBox(width: GtSpace.md),
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              initialValue: _draft.feeCurrency,
+                              decoration: InputDecoration(
+                                labelText: 'Currency',
+                                hintText: 'CAD',
+                                errorText: _error(DraftField.feeCurrency),
+                              ),
+                              textCapitalization: TextCapitalization.characters,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(3),
+                                FilteringTextInputFormatter.allow(RegExp('[A-Za-z]')),
+                                const _UpperCase(),
+                              ],
+                              onChanged: (v) =>
+                                  _update((d) => d.copyWith(feeCurrency: v)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      _Dropdown<FeeWaiver>(
+                        label: 'Fee waiver',
+                        value: _draft.feeWaiver,
+                        values: FeeWaiver.values,
+                        labelOf: (w) => w.label,
+                        onChanged: (v) => _update((d) => d.copyWith(feeWaiver: v)),
+                      ),
+                    ),
+                    const SizedBox(height: GtSpace.md),
+                    pair(
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: TextFormField(
+                              initialValue: _draft.tuitionAmount,
+                              decoration: InputDecoration(
+                                labelText: 'Tuition per year (estimate)',
+                                errorText: _error(DraftField.tuition),
+                              ),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+                              onChanged: (v) => _update((d) => d.copyWith(tuitionAmount: v)),
+                            ),
+                          ),
+                          const SizedBox(width: GtSpace.md),
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              initialValue: _draft.tuitionCurrency,
+                              decoration: InputDecoration(
+                                labelText: 'Currency',
+                                hintText: 'EUR',
+                                errorText: _error(DraftField.tuitionCurrency),
+                              ),
+                              textCapitalization: TextCapitalization.characters,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(3),
+                                FilteringTextInputFormatter.allow(RegExp('[A-Za-z]')),
+                                const _UpperCase(),
+                              ],
+                              onChanged: (v) => _update((d) => d.copyWith(tuitionCurrency: v)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox.shrink(),
+                    ),
+                    const SizedBox(height: GtSpace.md),
+                    TextFormField(
+                      initialValue: _draft.notes,
+                      decoration: const InputDecoration(
+                        labelText: 'Notes',
+                        hintText:
+                            'Admission requirements, funding notes, impressions…',
+                        alignLabelWithHint: true,
+                      ),
+                      minLines: 3,
+                      maxLines: 8,
+                      onChanged: (v) => _update((d) => d.copyWith(notes: v)),
                     ),
                   ],
                 ),
-                const SizedBox.shrink(),
               ),
-              const SizedBox(height: GtSpace.md),
-              TextFormField(
-                initialValue: _draft.notes,
-                decoration: const InputDecoration(
-                  labelText: 'Notes',
-                  hintText:
-                      'Admission requirements, funding notes, impressions…',
-                  alignLabelWithHint: true,
-                ),
-                minLines: 3,
-                maxLines: 8,
-                onChanged: (v) => _update((d) => d.copyWith(notes: v)),
-              ),
+
             ],
           ),
         ),

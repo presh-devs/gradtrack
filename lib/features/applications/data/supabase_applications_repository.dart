@@ -35,7 +35,15 @@ class SupabaseApplicationsRepository implements ApplicationsRepository {
       if (!draft.stage.isPreSubmission) 'submitted_at': DateTime.now().toUtc().toIso8601String(),
     };
     final created = await _client.from('applications').insert(row).select('id').single();
-    return created['id'] as String;
+    final id = created['id'] as String;
+    // Checklist found on a programme page (or in an import), in page order.
+    if (draft.requirements.isNotEmpty) {
+      await _client.from('requirements').insert([
+        for (final (i, r) in draft.requirements.indexed)
+          {...r.toJson(), 'application_id': id, 'sort_order': i + 1},
+      ]);
+    }
+    return id;
   }
 
   @override

@@ -437,3 +437,7 @@ verify_jwt = false
 
 [functions.notify-feedback]
 verify_jwt = false
+
+# Called from the app with the user's JWT, which the function checks itself.
+[functions.extract-programme]
+verify_jwt = false

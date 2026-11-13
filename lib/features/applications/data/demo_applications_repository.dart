@@ -1,4 +1,5 @@
 import '../../../core/demo/demo_store.dart';
+import '../../checklist/domain/requirement.dart';
 import '../domain/application.dart';
 import '../domain/application_draft.dart';
 import '../domain/applications_repository.dart';
@@ -33,7 +34,21 @@ class DemoApplicationsRepository implements ApplicationsRepository {
       programmeName: '',
       degree: draft.degree,
       stage: draft.stage,
+      requirementsTotal: draft.requirements.length,
     )));
+    if (draft.requirements.isNotEmpty) {
+      _store.requirements[id] = [
+        for (final (i, r) in draft.requirements.indexed)
+          Requirement(
+            id: 'r${_store.nextId()}',
+            applicationId: id,
+            kind: r.kind,
+            title: r.title,
+            external: r.external,
+            sortOrder: i + 1,
+          ),
+      ];
+    }
     return id;
   }
 
