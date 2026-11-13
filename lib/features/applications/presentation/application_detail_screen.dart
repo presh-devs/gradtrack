@@ -355,6 +355,8 @@ class _DetailsCard extends ConsumerWidget {
       ('Degree', app.degreeLabel),
       if (app.location != null) ('Location', app.location!),
       if (app.country != null) ('Country', app.country!),
+      if (app.requiresProfessorAcceptance)
+        ('Professor acceptance', 'Required before you can apply'),
       (
         'Priority',
         switch (app.priority) {

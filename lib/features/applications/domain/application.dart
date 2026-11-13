@@ -85,6 +85,9 @@ abstract class Application with _$Application {
     /// City / state, e.g. "Boston, MA". Country lives on the institution.
     String? location,
     String? department,
+
+    /// A professor must agree to supervise before the candidate can apply.
+    @Default(false) bool requiresProfessorAcceptance,
     String? researchArea,
     String? country,
     String? programmeUrl,

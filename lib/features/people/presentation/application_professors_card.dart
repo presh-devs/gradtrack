@@ -58,6 +58,13 @@ class ApplicationProfessorsCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: GtSpace.sm),
+            if (app.requiresProfessorAcceptance) ...[
+              Text(
+                'This programme needs a professor to accept you before you can apply.',
+                style: t.bodyMedium?.copyWith(color: gt.warning.fg),
+              ),
+              const SizedBox(height: GtSpace.sm),
+            ],
             if (linked == null && value.hasError)
               ErrorBanner(error: value.error!, onRetry: () => ref.invalidate(professorsControllerProvider))
             else if (linked == null)

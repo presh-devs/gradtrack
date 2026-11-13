@@ -20,6 +20,11 @@ enum ImportField {
   location('Location (city, state)', aliases: [
     'location', 'city', 'state', 'citystate', 'city/state', 'campus', 'town', 'province',
   ]),
+  professorAcceptance('Needs professor acceptance', aliases: [
+    'needsprofessoracceptance', 'professoracceptance', 'requiresprofessoracceptance', 'supervisoracceptance',
+    'supervisorrequired', 'needssupervisor', 'requiressupervisor', 'acceptanceletter', 'professorrequired',
+    'contactprofessorfirst',
+  ]),
   department('Department', aliases: ['department', 'dept', 'faculty', 'school/department']),
   researchArea('Research area', aliases: [
     'researcharea', 'research', 'area', 'specialisation', 'specialization', 'focus', 'researchinterests',
@@ -127,13 +132,13 @@ const templateHeaders = [
   'University', 'Country', 'Location', 'Programme', 'Degree', 'Department', 'Research area',
   'Deadline', 'Deadline time zone', 'Funding deadline', 'Applications open', 'Expected decision',
   'Application fee', 'Fee currency', 'Tuition', 'Programme page', 'Application portal', 'Portal username',
-  'Stage', 'Priority', 'Requirements', 'Notes',
+  'Stage', 'Priority', 'Needs professor acceptance', 'Requirements', 'Notes',
 ];
 const templateExample = [
   'University of Toronto', 'CA', 'Toronto, ON', 'Computer Science', 'PhD', 'Computer Science', 'Machine learning',
   '2026-12-01 23:59', 'America/Toronto', '2026-11-15', 'Oct 2026', 'Mar 2027',
   '125', 'CAD', 'CAD 7k5', 'https://web.cs.toronto.edu/graduate', 'https://sgs.utoronto.ca', 'jdoe',
-  'Shortlisted', 'Top', 'Transcript, CV, SOP, IELTS', '',
+  'Shortlisted', 'Top', 'No', 'Transcript, CV, SOP, IELTS', '',
 ];
 
 String buildTemplateCsv() => Csv(autoDetect: false).encode([templateHeaders, templateExample]);
@@ -202,6 +207,12 @@ List<ImportRow> buildImportRows(
     final country = parseCountry(countryRaw) ?? countryFromLocation(location) ?? known?.country;
     if (countryRaw.isNotEmpty && parseCountry(countryRaw) == null) {
       warnings.add('Country "$countryRaw" not recognised, so it was left blank');
+    }
+
+    final acceptanceRaw = cell(ImportField.professorAcceptance);
+    final needsAcceptance = parseYesNo(acceptanceRaw);
+    if (acceptanceRaw.isNotEmpty && needsAcceptance == null) {
+      warnings.add('Needs professor acceptance "$acceptanceRaw" not understood, so it was left as No');
     }
 
     final degreeRaw = cell(ImportField.degree);
@@ -354,6 +365,7 @@ List<ImportRow> buildImportRows(
       opensOn: opensOn,
       decisionExpected: toApprox(decisionWhen),
       location: _blank(location),
+      requiresProfessorAcceptance: needsAcceptance ?? false,
       department: _blank(cell(ImportField.department)),
       researchArea: _blank(cell(ImportField.researchArea)),
       programmeUrl: normaliseUrl(cell(ImportField.programmeUrl)),

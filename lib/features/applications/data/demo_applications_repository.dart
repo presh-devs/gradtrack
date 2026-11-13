@@ -83,6 +83,7 @@ class DemoApplicationsRepository implements ApplicationsRepository {
       fundingDeadline: d.fundingDeadline.toDeadline(),
       location: blankToNull(d.location),
       department: blankToNull(d.department),
+      requiresProfessorAcceptance: d.requiresProfessorAcceptance,
       researchArea: blankToNull(d.researchArea),
       programmeUrl: blankToNull(d.programmeUrl),
       portalUrl: blankToNull(d.portalUrl),

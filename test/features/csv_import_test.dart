@@ -245,6 +245,29 @@ Waterloo,CS,MBA,,\$90,Whatever''',
       expect(r.where((e) => e.external).map((e) => e.kind), ['transcript', 'english_test', 'certificate']);
     });
 
+    test('reads yes/no cells', () {
+      for (final v in ['Yes', 'y', 'Required', 'yes, email first', '✓']) {
+        expect(parseYesNo(v), isTrue, reason: v);
+      }
+      for (final v in ['No', 'n/a', 'Not required', 'optional']) {
+        expect(parseYesNo(v), isFalse, reason: v);
+      }
+      expect(parseYesNo(''), isNull);
+      expect(parseYesNo('maybe'), isNull);
+    });
+
+    test('imports whether a professor must accept first', () {
+      const csv = 'University,Programme,Needs supervisor\n'
+          'Tsinghua,Computer Science,Yes\n'
+          'ETH,Data Science,No\n'
+          'TUM,Informatics,\n';
+      final t = CsvTable.parse(csv);
+      final m = autoMap(t.headers);
+      expect(m[2], ImportField.professorAcceptance);
+      final r = buildImportRows(t, m, options);
+      expect(r.map((e) => e.draft!.requiresProfessorAcceptance), [true, false, false]);
+    });
+
     test('takes the country from a location only when it names one', () {
       expect(countryFromLocation('Boston, USA'), 'US');
       expect(countryFromLocation('Toronto, Canada'), 'CA');

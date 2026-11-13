@@ -147,6 +147,7 @@ class DemoStore {
         degree: DegreeType.msc,
         country: 'DE',
         location: 'Munich, Bavaria',
+        requiresProfessorAcceptance: true,
         stage: ApplicationStage.underReview,
         priority: 2,
         deadline: d('Europe/Berlin', -30),

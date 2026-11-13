@@ -303,6 +303,19 @@ class _ApplicationFormState extends ConsumerState<_ApplicationForm> {
               textCapitalization: TextCapitalization.words,
               onChanged: (v) => _update((d) => d.copyWith(location: v)),
             ),
+            const SizedBox(height: GtSpace.sm),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _draft.requiresProfessorAcceptance,
+              onChanged: (on) => _update((d) => d.copyWith(requiresProfessorAcceptance: on)),
+              title: Text(
+                'Needs a professor’s acceptance first',
+                style: t.titleSmall,
+              ),
+              subtitle: const Text(
+                'A professor must agree to supervise you before you can apply.',
+              ),
+            ),
           ],
         ),
 

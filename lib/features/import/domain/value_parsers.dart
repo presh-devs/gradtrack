@@ -396,6 +396,19 @@ String? parseCountry(String raw) {
   return _countryNames[_norm(s)];
 }
 
+/// Yes/no cell ("Yes", "y", "required", "✓", "No", "n/a"); null if unclear or empty.
+bool? parseYesNo(String raw) {
+  final s = raw.trim().toLowerCase().replaceAll(RegExp(r'[.!]+$'), '');
+  if (s.isEmpty) return null;
+  const yes = {'yes', 'y', 'true', '1', 'required', 'needed', 'must', 'mandatory', '✓', '✔', 'x'};
+  const no = {'no', 'n', 'false', '0', 'not required', 'not needed', 'none', 'n/a', 'na', '-', 'optional'};
+  if (yes.contains(s)) return true;
+  if (no.contains(s)) return false;
+  if (s.startsWith('yes')) return true;
+  if (s.startsWith('no ') || s.startsWith('not ')) return false;
+  return null;
+}
+
 /// Country from a free-text location: the whole cell ("Beijing", "finland")
 /// or its last comma-separated part ("Boston, USA"); null if neither matches.
 String? countryFromLocation(String raw) {
