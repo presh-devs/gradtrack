@@ -7,6 +7,7 @@ import '../../../core/env.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/gt_widgets.dart';
 import '../../auth/presentation/auth_controllers.dart';
+import '../../feedback/presentation/feedback_card.dart';
 import 'digest_settings_card.dart';
 
 part 'settings_screen.g.dart';
@@ -62,12 +63,14 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: GtSpace.lg),
               const DigestSettingsCard(),
               const SizedBox(height: GtSpace.lg),
+              const FeedbackCard(),
+              const SizedBox(height: GtSpace.lg),
               Card(
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: GtSpace.lg, vertical: GtSpace.xs),
                   leading: IconWell(icon: GtIcons.signOut, tone: gt.danger, size: 40),
                   title: Text('Sign out', style: t.titleSmall),
-                  subtitle: Text(Env.demo ? 'Demo mode · sample data' : 'Connected to Supabase'),
+                  subtitle: Env.demo ? const Text('Demo mode · sample data') : null,
                   onTap: () => ref.read(authStatusProvider.notifier).signOut(),
                 ),
               ),

@@ -4,6 +4,7 @@ import '../../features/applications/domain/application.dart';
 import '../../features/applications/domain/institution.dart';
 import '../../features/attention/domain/attention_item.dart';
 import '../../features/checklist/domain/requirement.dart';
+import '../../features/feedback/domain/feedback.dart';
 import '../../features/letters/domain/letters.dart';
 import '../../features/links/domain/application_link.dart';
 import '../../features/people/domain/professor.dart';
@@ -30,6 +31,17 @@ class DemoStore {
   /// Checklists by application id, created on first view
   /// (see DemoRequirementsRepository).
   final Map<String, List<Requirement>> requirements = {};
+
+  /// Feedback sent from Settings, oldest first (see DemoFeedbackRepository).
+  final List<FeedbackEntry> feedback = [
+    FeedbackEntry(
+      id: 'f1',
+      kind: FeedbackKind.feature,
+      message: 'Could the digest also include professors I should follow up with?',
+      status: FeedbackStatus.planned,
+      createdAt: DateTime(2026, 11, 2, 9, 30),
+    ),
+  ];
 
   /// Extra links by application id (see DemoLinksRepository).
   final Map<String, List<ApplicationLink>> links = {

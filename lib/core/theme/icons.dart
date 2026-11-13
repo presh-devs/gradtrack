@@ -111,6 +111,7 @@ abstract final class GtIcons {
   static const edit = _Ix(IconsaxPlusLinear.edit_2);
   static const money = _Ix(IconsaxPlusLinear.money_2);
   static const note = _Ix(IconsaxPlusLinear.note_1);
+  static const feedback = _Ix(IconsaxPlusLinear.message_edit);
 
   // Import
   static const check = _Ix(IconsaxPlusLinear.tick_circle);
