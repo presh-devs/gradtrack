@@ -81,6 +81,7 @@ class DemoApplicationsRepository implements ApplicationsRepository {
       priority: d.priority,
       deadline: d.deadline.toDeadline(),
       fundingDeadline: d.fundingDeadline.toDeadline(),
+      location: blankToNull(d.location),
       department: blankToNull(d.department),
       researchArea: blankToNull(d.researchArea),
       programmeUrl: blankToNull(d.programmeUrl),

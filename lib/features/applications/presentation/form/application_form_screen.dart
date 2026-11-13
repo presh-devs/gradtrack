@@ -293,6 +293,16 @@ class _ApplicationFormState extends ConsumerState<_ApplicationForm> {
                 onChanged: (v) => _update((d) => d.copyWith(researchArea: v)),
               ),
             ),
+            const SizedBox(height: GtSpace.md),
+            TextFormField(
+              initialValue: _draft.location,
+              decoration: const InputDecoration(
+                labelText: 'Location',
+                hintText: 'City, state, e.g. Boston, MA',
+              ),
+              textCapitalization: TextCapitalization.words,
+              onChanged: (v) => _update((d) => d.copyWith(location: v)),
+            ),
           ],
         ),
 

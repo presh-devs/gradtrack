@@ -245,6 +245,15 @@ Waterloo,CS,MBA,,\$90,Whatever''',
       expect(r.where((e) => e.external).map((e) => e.kind), ['transcript', 'english_test', 'certificate']);
     });
 
+    test('takes the country from a location only when it names one', () {
+      expect(countryFromLocation('Boston, USA'), 'US');
+      expect(countryFromLocation('Toronto, Canada'), 'CA');
+      expect(countryFromLocation('finland'), 'FI');
+      expect(countryFromLocation('Boston, MA'), isNull);
+      expect(countryFromLocation('Springfield'), isNull);
+      expect(countryFromLocation(''), isNull);
+    });
+
     test('maps an application sheet and never maps passwords', () {
       final headers = [
         'S/N', 'NAME OF SCHOOL', 'PROGRAM', 'WEBSITE', 'LOCATION', 'FEES(﹩)', 'FUNDING', 'APPLICATION FEE',
@@ -255,7 +264,7 @@ Waterloo,CS,MBA,,\$90,Whatever''',
       expect(m[1], ImportField.university);
       expect(m[2], ImportField.programme);
       expect(m[3], ImportField.programmeUrl);
-      expect(m[4], ImportField.country);
+      expect(m[4], ImportField.location);
       expect(m[5], ImportField.tuition);
       expect(m[6], ImportField.fundingDeadline); // user can unmap; it's an alias
       expect(m[7], ImportField.fee);
@@ -283,7 +292,8 @@ Waterloo,CS,MBA,,\$90,Whatever''',
       final pku = r[0].draft!;
       expect(pku.degree, DegreeType.msc); // "Global master in management"
       expect(r[1].draft!.degree, DegreeType.phd); // nothing in the title: default
-      expect(pku.institutionCountry, 'CN');
+      expect(pku.institutionCountry, 'CN'); // from the location
+      expect(pku.location, 'Beijing');
       expect((pku.feeAmount, pku.feeCurrency), ('800', 'CNY'));
       expect(pku.opensOn!.label, 'Oct 2026');
       final d = pku.deadline.toDeadline()!;

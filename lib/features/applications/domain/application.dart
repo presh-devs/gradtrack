@@ -82,6 +82,8 @@ abstract class Application with _$Application {
     required String programmeName,
     required DegreeType degree,
     required ApplicationStage stage,
+    /// City / state, e.g. "Boston, MA". Country lives on the institution.
+    String? location,
     String? department,
     String? researchArea,
     String? country,

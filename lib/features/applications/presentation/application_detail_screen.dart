@@ -337,6 +337,7 @@ class _DetailsCard extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final rows = <(String, String)>[
       ('Degree', app.degreeLabel),
+      if (app.location != null) ('Location', app.location!),
       if (app.country != null) ('Country', app.country!),
       (
         'Priority',

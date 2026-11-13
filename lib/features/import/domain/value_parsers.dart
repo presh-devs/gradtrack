@@ -396,6 +396,20 @@ String? parseCountry(String raw) {
   return _countryNames[_norm(s)];
 }
 
+/// Country from a free-text location: the whole cell ("Beijing", "finland")
+/// or its last comma-separated part ("Boston, USA"); null if neither matches.
+String? countryFromLocation(String raw) {
+  final s = raw.trim();
+  if (s.isEmpty) return null;
+  final whole = parseCountry(s);
+  if (whole != null) return whole;
+  final parts = s.split(',');
+  if (parts.length < 2) return null;
+  final last = parts.last.trim();
+  // A 2-letter tail is usually a state or province ("Boston, MA"), not a country.
+  return last.length == 2 ? null : parseCountry(last);
+}
+
 /// IANA zone from an exact name ("America/Toronto"), an abbreviation ("EST",
 /// "AoE") or a unique city ("Toronto"); null if not resolvable.
 String? parseZone(String raw) {

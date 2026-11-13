@@ -16,7 +16,10 @@ enum ImportField {
     'programme', 'program', 'programmename', 'programname', 'course', 'degreeprogram', 'degreeprogramme',
   ]),
   degree('Degree', aliases: ['degree', 'degreetype', 'level', 'qualification']),
-  country('Country', aliases: ['country', 'countrycode', 'location']),
+  country('Country', aliases: ['country', 'countrycode']),
+  location('Location (city, state)', aliases: [
+    'location', 'city', 'state', 'citystate', 'city/state', 'campus', 'town', 'province',
+  ]),
   department('Department', aliases: ['department', 'dept', 'faculty', 'school/department']),
   researchArea('Research area', aliases: [
     'researcharea', 'research', 'area', 'specialisation', 'specialization', 'focus', 'researchinterests',
@@ -121,13 +124,13 @@ ColumnMapping autoMap(List<String> headers) {
 
 /// Spreadsheet headers for the downloadable template, plus one example row.
 const templateHeaders = [
-  'University', 'Country', 'Programme', 'Degree', 'Department', 'Research area',
+  'University', 'Country', 'Location', 'Programme', 'Degree', 'Department', 'Research area',
   'Deadline', 'Deadline time zone', 'Funding deadline', 'Applications open', 'Expected decision',
   'Application fee', 'Fee currency', 'Tuition', 'Programme page', 'Application portal', 'Portal username',
   'Stage', 'Priority', 'Requirements', 'Notes',
 ];
 const templateExample = [
-  'University of Toronto', 'CA', 'Computer Science', 'PhD', 'Computer Science', 'Machine learning',
+  'University of Toronto', 'CA', 'Toronto, ON', 'Computer Science', 'PhD', 'Computer Science', 'Machine learning',
   '2026-12-01 23:59', 'America/Toronto', '2026-11-15', 'Oct 2026', 'Mar 2027',
   '125', 'CAD', 'CAD 7k5', 'https://web.cs.toronto.edu/graduate', 'https://sgs.utoronto.ca', 'jdoe',
   'Shortlisted', 'Top', 'Transcript, CV, SOP, IELTS', '',
@@ -194,7 +197,9 @@ List<ImportRow> buildImportRows(
     final universityName = cell(ImportField.university);
     final known = knownInstitutions[_key(universityName)];
     final countryRaw = cell(ImportField.country);
-    final country = parseCountry(countryRaw) ?? known?.country;
+    final location = cell(ImportField.location);
+    // Many sheets only have a location ("Beijing", "Boston, USA"): take the country from it too.
+    final country = parseCountry(countryRaw) ?? countryFromLocation(location) ?? known?.country;
     if (countryRaw.isNotEmpty && parseCountry(countryRaw) == null) {
       warnings.add('Country "$countryRaw" not recognised, so it was left blank');
     }
@@ -348,6 +353,7 @@ List<ImportRow> buildImportRows(
       fundingDeadline: toInput(fundingWhen),
       opensOn: opensOn,
       decisionExpected: toApprox(decisionWhen),
+      location: _blank(location),
       department: _blank(cell(ImportField.department)),
       researchArea: _blank(cell(ImportField.researchArea)),
       programmeUrl: normaliseUrl(cell(ImportField.programmeUrl)),
