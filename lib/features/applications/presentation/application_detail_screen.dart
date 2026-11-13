@@ -2,9 +2,11 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/icons.dart';
 import '../../../app/router.dart';
+import '../../../core/fx/naira_rates.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/time/deadline.dart';
 import '../../../core/widgets/async_value_view.dart';
@@ -327,14 +329,28 @@ class _DeadlineCard extends StatelessWidget {
   }
 }
 
-class _DetailsCard extends StatelessWidget {
+class _DetailsCard extends ConsumerWidget {
   const _DetailsCard({required this.app});
 
   final Application app;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = Theme.of(context).textTheme;
+    // Naira beside foreign amounts; left out while loading or if rates fail.
+    final rates = ref.watch(nairaRatesProvider).value;
+    var convertedAny = false;
+    String withNaira(double amount, String? currency) {
+      final base = '$currency ${_money(amount)}';
+      if (rates == null || currency?.toUpperCase() == 'NGN') return base;
+      final naira = rates.toNaira(amount, currency);
+      if (naira == null) return base;
+      convertedAny = true;
+      return '$base  ≈ ₦${_money(naira.roundToDouble())}';
+    }
+
+    // Rows whose value is a web link, opened on tap.
+    const linkRows = {'Programme page', 'Portal'};
     final rows = <(String, String)>[
       ('Degree', app.degreeLabel),
       if (app.location != null) ('Location', app.location!),
@@ -351,12 +367,12 @@ class _DetailsCard extends StatelessWidget {
       if (app.portalUrl != null) ('Portal', app.portalUrl!),
       if (app.portalUsername != null) ('Portal username', app.portalUsername!),
       if (app.feeAmount != null)
-        ('Application fee', '${app.feeCurrency} ${_money(app.feeAmount!)}'),
+        ('Application fee', withNaira(app.feeAmount!, app.feeCurrency)),
       if (app.feeWaiver != FeeWaiver.none) ('Fee waiver', app.feeWaiver.label),
       if (app.tuitionAmount != null)
         (
           'Tuition / year',
-          '${app.tuitionCurrency} ${_money(app.tuitionAmount!)}',
+          withNaira(app.tuitionAmount!, app.tuitionCurrency),
         ),
       if (app.notes != null) ('Notes', app.notes!),
     ];
@@ -384,11 +400,80 @@ class _DetailsCard extends StatelessWidget {
                       width: 120,
                       child: Text(label, style: t.bodySmall),
                     ),
-                    Expanded(child: SelectableText(value, style: t.bodyMedium)),
+                    Expanded(
+                      child: switch (linkRows.contains(label) ? _webLink(value) : null) {
+                        final uri? => _ExternalLink(text: value, uri: uri),
+                        null => SelectableText(value, style: t.bodyMedium),
+                      },
+                    ),
                   ],
                 ),
               ),
+            if (convertedAny && rates != null) ...[
+              const SizedBox(height: GtSpace.xs),
+              Text(
+                '₦ amounts are approximate, at the exchange rate of '
+                '${DateFormat('d MMM y').format(rates.updatedAt.toLocal())}.',
+                style: t.bodySmall?.copyWith(color: context.gt.textMuted),
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// http(s) links only; anything else stays plain text.
+Uri? _webLink(String raw) {
+  final uri = Uri.tryParse(raw.trim());
+  final isWeb = uri != null && (uri.scheme == 'http' || uri.scheme == 'https') && uri.host.isNotEmpty;
+  return isWeb ? uri : null;
+}
+
+/// A link that opens in a new browser tab.
+class _ExternalLink extends StatelessWidget {
+  const _ExternalLink({required this.text, required this.uri});
+
+  final String text;
+  final Uri uri;
+
+  Future<void> _open(BuildContext context) async {
+    final opened = await launchUrl(uri, webOnlyWindowName: '_blank');
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Couldn't open $text")));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.gt.primary;
+    return Semantics(
+      link: true,
+      child: Tooltip(
+        message: 'Open in a new tab',
+        child: InkWell(
+          onTap: () => _open(context),
+          borderRadius: BorderRadius.circular(4),
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: text),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: GtIcon(GtIcons.link, size: 14, color: color),
+                  ),
+                ),
+              ],
+            ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: color,
+              decoration: TextDecoration.underline,
+              decorationColor: color,
+            ),
+          ),
         ),
       ),
     );
