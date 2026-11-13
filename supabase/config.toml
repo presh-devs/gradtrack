@@ -434,3 +434,6 @@ enabled = true
 # Settings with the user's JWT; the function checks both itself.
 [functions.send-digests]
 verify_jwt = false
+
+[functions.notify-feedback]
+verify_jwt = false
