@@ -119,6 +119,20 @@ function isPublicHttpUrl(raw: string): URL | null {
   return u;
 }
 
+/**
+ * The link in what the user pasted: a bare URL, "www.x.edu/…", or a URL
+ * inside other text (phones' Share menus add the page title), possibly
+ * wrapped in quotes, brackets or angle brackets.
+ */
+function linkFrom(input: string): URL | null {
+  const s = input.trim();
+  const found = s.match(/https?:\/\/[^\s<>"'`]+/i)?.[0] ??
+    (/\s/.test(s) ? null : s.replace(/^[<("'\[]+|[>)"'\].,;]+$/g, ""));
+  if (!found) return null;
+  const cleaned = found.replace(/[>)"'\].,;]+$/g, "");
+  return isPublicHttpUrl(/^[a-z]+:\/\//i.test(cleaned) ? cleaned : `https://${cleaned}`);
+}
+
 type Page = { kind: "text"; title: string; text: string } | { kind: "pdf"; base64: string };
 
 async function fetchPage(url: URL): Promise<Page> {
@@ -266,8 +280,12 @@ Deno.serve(async (req) => {
 
   let url: URL | null = null;
   if (rawUrl) {
-    url = isPublicHttpUrl(/^[a-z]+:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`);
-    if (!url) return fail("That doesn't look like a web address.", 400, "input");
+    url = linkFrom(rawUrl);
+    if (!url) {
+      return /\s/.test(rawUrl) && rawUrl.length > 80
+        ? fail("That looks like page text, not a link. Use “Paste the page text instead”.", 400, "looks_like_text")
+        : fail("That doesn't look like a web address. Copy the link from your browser's address bar.", 400, "input");
+    }
   } else if (typeof body.source_url === "string") {
     url = isPublicHttpUrl(body.source_url.trim());
   }

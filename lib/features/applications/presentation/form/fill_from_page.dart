@@ -68,7 +68,17 @@ class _FillFromPageCardState extends ConsumerState<FillFromPageCard> {
     super.dispose();
   }
 
+  /// Page text pasted into the link box (long, with spaces, no link in it).
+  static bool _looksLikePageText(String s) =>
+      s.length > 80 && RegExp(r'\s').hasMatch(s) && !RegExp(r'https?://', caseSensitive: false).hasMatch(s);
+
   Future<void> _run() async {
+    if (!_pasteMode && _looksLikePageText(_url.text.trim())) {
+      // Treat it as page text rather than rejecting it as a bad link.
+      _text.text = _url.text.trim();
+      _url.clear();
+      setState(() => _pasteMode = true);
+    }
     final url = _url.text.trim();
     final text = _text.text.trim();
     if (_pasteMode ? text.isEmpty : url.isEmpty) {
