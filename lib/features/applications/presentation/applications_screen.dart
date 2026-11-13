@@ -62,14 +62,20 @@ class ApplicationsScreen extends ConsumerWidget {
               title: 'Applications',
               subtitle: total == null ? null : '$total programmes this cycle',
               actions: [
-                if (width >= GtBreakpoints.medium) ...[
+                // Phones get an icon-only button so Import is still one tap away.
+                if (width >= GtBreakpoints.medium)
                   OutlinedButton.icon(
                     onPressed: () => context.go(Routes.importApplications),
                     icon: const GtIcon(GtIcons.import, size: 18),
-                    label: const Text('Import CSV'),
+                    label: const Text('Import sheet'),
+                  )
+                else
+                  IconButton.outlined(
+                    tooltip: 'Import sheet',
+                    onPressed: () => context.go(Routes.importApplications),
+                    icon: const GtIcon(GtIcons.import, size: 20),
                   ),
-                  const SizedBox(width: GtSpace.sm),
-                ],
+                const SizedBox(width: GtSpace.sm),
                 FilledButton.icon(
                   onPressed: () => context.go(Routes.newApplication),
                   icon: const GtIcon(GtIcons.add, size: 18),
@@ -84,6 +90,34 @@ class ApplicationsScreen extends ConsumerWidget {
                 value: apps,
                 onRetry: () => ref.invalidate(applicationsControllerProvider),
                 data: (list) {
+                  if (list.isEmpty && total == 0) {
+                    // First run: offer the spreadsheet import as prominently as adding one by one.
+                    return Align(
+                      alignment: Alignment.topCenter,
+                      child: EmptyState(
+                        icon: GtIcons.applications,
+                        title: 'No applications yet',
+                        message: 'Already tracking them in a spreadsheet? Import it in one go, '
+                            'or add programmes one at a time.',
+                        action: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: GtSpace.sm,
+                          runSpacing: GtSpace.sm,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: () => context.go(Routes.importApplications),
+                              icon: const GtIcon(GtIcons.import, size: 18),
+                              label: const Text('Import spreadsheet'),
+                            ),
+                            OutlinedButton(
+                              onPressed: () => context.go(Routes.newApplication),
+                              child: const Text('Add application'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
                   if (list.isEmpty) {
                     return Align(
                       alignment: Alignment.topCenter,
