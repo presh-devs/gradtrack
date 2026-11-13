@@ -5,6 +5,7 @@ import '../../features/applications/domain/institution.dart';
 import '../../features/attention/domain/attention_item.dart';
 import '../../features/checklist/domain/requirement.dart';
 import '../../features/letters/domain/letters.dart';
+import '../../features/links/domain/application_link.dart';
 import '../../features/people/domain/professor.dart';
 import '../../features/settings/domain/profile.dart';
 import '../time/deadline.dart';
@@ -29,6 +30,25 @@ class DemoStore {
   /// Checklists by application id, created on first view
   /// (see DemoRequirementsRepository).
   final Map<String, List<Requirement>> requirements = {};
+
+  /// Extra links by application id (see DemoLinksRepository).
+  final Map<String, List<ApplicationLink>> links = {
+    'a1': [
+      const ApplicationLink(
+        id: 'l1',
+        applicationId: 'a1',
+        label: 'Graduate funding',
+        url: 'https://www.sgs.utoronto.ca/awards-funding/',
+        sortOrder: 1,
+      ),
+      const ApplicationLink(
+        id: 'l2',
+        applicationId: 'a1',
+        url: 'https://web.cs.toronto.edu/people/faculty-directory',
+        sortOrder: 2,
+      ),
+    ],
+  };
 
   int _seq = 100;
   int nextId() => ++_seq;

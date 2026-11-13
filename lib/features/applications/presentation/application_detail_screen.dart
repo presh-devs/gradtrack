@@ -2,7 +2,6 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/icons.dart';
 import '../../../app/router.dart';
@@ -10,9 +9,11 @@ import '../../../core/fx/naira_rates.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/time/deadline.dart';
 import '../../../core/widgets/async_value_view.dart';
+import '../../../core/widgets/external_link.dart';
 import '../../../core/widgets/gt_widgets.dart';
 import '../../checklist/presentation/checklist_card.dart';
 import '../../letters/presentation/letters_card.dart';
+import '../../links/presentation/links_card.dart';
 import '../../people/presentation/application_professors_card.dart';
 import '../domain/application.dart';
 import 'applications_controller.dart';
@@ -71,6 +72,8 @@ class _Workspace extends StatelessWidget {
       _DeadlineCard(app: app),
       const SizedBox(height: GtSpace.lg),
       _DetailsCard(app: app),
+      const SizedBox(height: GtSpace.lg),
+      LinksCard(app: app),
       const SizedBox(height: GtSpace.lg),
       ApplicationProfessorsCard(app: app),
     ];
@@ -403,8 +406,8 @@ class _DetailsCard extends ConsumerWidget {
                       child: Text(label, style: t.bodySmall),
                     ),
                     Expanded(
-                      child: switch (linkRows.contains(label) ? _webLink(value) : null) {
-                        final uri? => _ExternalLink(text: value, uri: uri),
+                      child: switch (linkRows.contains(label) ? webLink(value) : null) {
+                        final uri? => ExternalLink(text: value, uri: uri),
                         null => SelectableText(value, style: t.bodyMedium),
                       },
                     ),
@@ -420,62 +423,6 @@ class _DetailsCard extends ConsumerWidget {
               ),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// http(s) links only; anything else stays plain text.
-Uri? _webLink(String raw) {
-  final uri = Uri.tryParse(raw.trim());
-  final isWeb = uri != null && (uri.scheme == 'http' || uri.scheme == 'https') && uri.host.isNotEmpty;
-  return isWeb ? uri : null;
-}
-
-/// A link that opens in a new browser tab.
-class _ExternalLink extends StatelessWidget {
-  const _ExternalLink({required this.text, required this.uri});
-
-  final String text;
-  final Uri uri;
-
-  Future<void> _open(BuildContext context) async {
-    final opened = await launchUrl(uri, webOnlyWindowName: '_blank');
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Couldn't open $text")));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final color = context.gt.primary;
-    return Semantics(
-      link: true,
-      child: Tooltip(
-        message: 'Open in a new tab',
-        child: InkWell(
-          onTap: () => _open(context),
-          borderRadius: BorderRadius.circular(4),
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(text: text),
-                WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: GtIcon(GtIcons.link, size: 14, color: color),
-                  ),
-                ),
-              ],
-            ),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: color,
-              decoration: TextDecoration.underline,
-              decorationColor: color,
-            ),
-          ),
         ),
       ),
     );
